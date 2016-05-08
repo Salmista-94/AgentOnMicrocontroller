@@ -102,8 +102,7 @@ df_Initialize(mc_platform_p mc_platform)
   df->mc_platform = mc_platform;
 
   /* Mutex Init */
-  df->lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  MUTEX_INIT(df->lock);
+  new_Mutex(&(df->lock));
 
   /* Cond Init */
   df->cond = (COND_T*)malloc(sizeof(COND_T));
@@ -117,8 +116,7 @@ df_Initialize(mc_platform_p mc_platform)
 
   df->num_entries = 0;
   df->waiting = 0;
-  df->waiting_lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  MUTEX_INIT(df->waiting_lock);
+  new_Mutex(&(df->waiting_lock));
   df->waiting_cond = (COND_T*)malloc(sizeof(COND_T));
   COND_INIT(df->waiting_cond);
   return df;
@@ -304,9 +302,8 @@ df_request_list_node_New(void)
   df_request_list_node_p node;
   node = (df_request_list_node_p)
     malloc(sizeof(df_request_list_node_t));
-  CHECK_NULL(node, return NULL;);
-  node->lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  MUTEX_INIT(node->lock);
+  Return_arg__when_CHECK_NULL(node, NULL);
+  new_Mutex(&(node->lock));
   node->cond = (COND_T*)malloc(sizeof(COND_T));
   COND_INIT(node->cond);
   node->data_size = 0;

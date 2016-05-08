@@ -188,8 +188,7 @@ mc_platform_Initialize(MCAgency_t agency, ChOptions_t* ch_options)
 
   /* Initialize quit flag */
   mc_platform->quit = 0;
-  mc_platform->quit_lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  MUTEX_INIT(mc_platform->quit_lock);
+  new_Mutex(&(mc_platform->quit_lock));
   mc_platform->quit_cond = (COND_T*)malloc(sizeof(COND_T));
   COND_INIT(mc_platform->quit_cond);
 

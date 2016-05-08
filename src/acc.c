@@ -94,8 +94,7 @@ acc_Initialize(struct mc_platform_s* mc_platform)
   acc->mc_platform = mc_platform;
 
   acc->waiting = 0;
-  acc->waiting_lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  MUTEX_INIT(acc->waiting_lock);
+  new_Mutex(&(acc->waiting_lock));
   acc->waiting_cond = (COND_T*)malloc(sizeof(COND_T));
   COND_INIT(acc->waiting_cond);
 

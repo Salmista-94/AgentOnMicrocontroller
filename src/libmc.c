@@ -2147,8 +2147,7 @@ MC_Initialize( /*{{{*/
 
   printf("Initializing callback lock...\n");
   if(g_agent_callback_lock == NULL) {
-    g_agent_callback_lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-    MUTEX_INIT(g_agent_callback_lock);
+    new_Mutex(&(g_agent_callback_lock));
   }
 
   memset(privkey, '\0', 1210);

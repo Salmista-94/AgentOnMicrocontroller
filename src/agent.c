@@ -185,18 +185,14 @@ agent_Copy(const agent_p agent)
   /*agent_interp*/
   cp_agent->agent_interp = NULL;
   /*run_lock*/
-  cp_agent->run_lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  MUTEX_INIT(cp_agent->run_lock);
+  new_Mutex(&(cp_agent->run_lock));
   /*agent_persistent*/
   cp_agent->agent_persistent = agent->agent_persistent;
   
   /*lock*/
-  cp_agent->lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  MUTEX_INIT(cp_agent->lock);
-  MUTEX_NEW(cp_agent->agent_status_lock);
-  MUTEX_INIT(cp_agent->agent_status_lock);
-  COND_NEW(cp_agent->agent_status_cond);
-  COND_INIT(cp_agent->agent_status_cond);
+  new_Mutex(&(cp_agent->lock));
+  new_Mutex(&(cp_agent->agent_status_lock));
+  new_COND(&(cp_agent->agent_status_cond));
 
 	/* Mailbox */
 	cp_agent->mailbox = ListInitialize();
@@ -228,16 +224,12 @@ int agent_Init(agent_p agent)
   memset(agent, 0, sizeof(agent_t));
 
   /* Lets go ahead and allocate the threading stuff */
-  MUTEX_NEW(agent->run_lock);
-  MUTEX_INIT(agent->run_lock);
+  new_Mutex(&(agent->run_lock));
 
-  MUTEX_NEW(agent->lock);
-  MUTEX_INIT(agent->lock);
+  new_Mutex(&(agent->lock));
 
-  MUTEX_NEW(agent->agent_status_lock);
-  MUTEX_INIT(agent->agent_status_lock);
-  COND_NEW(agent->agent_status_cond);
-  COND_INIT(agent->agent_status_cond);
+  new_Mutex(&(agent->agent_status_lock));
+  new_COND(&(agent->agent_status_cond));
 
   agent->mailbox = ListInitialize();
 
@@ -255,18 +247,14 @@ agent_NewBinary( struct mc_platform_s *mc_platform)
   memset(agent, 0, sizeof(agent_t));
 
   /* Set up general agent data access mutex */
-  agent->lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  MUTEX_INIT(agent->lock);
+  new_Mutex(&(agent->lock));
 
   /* set up agent status mutex and cond */
-  MUTEX_NEW(agent->agent_status_lock);
-  MUTEX_INIT(agent->agent_status_lock);
-  COND_NEW(agent->agent_status_cond);
-  COND_INIT(agent->agent_status_cond);
+  new_Mutex(&(agent->agent_status_lock));
+  new_COND(&(agent->agent_status_cond));
 
   /* Set up run_lock mutex */
-  agent->run_lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  MUTEX_INIT(agent->run_lock);
+  new_Mutex(&(agent->run_lock));
 
   /* set flags and variables for the agent */
   agent->id = rand();
@@ -343,18 +331,14 @@ agent_Initialize(
   memset(agent, 0, sizeof(agent_t));
 
   /* Set up general agent data access mutex */
-  agent->lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  MUTEX_INIT(agent->lock);
+  new_Mutex(&(agent->lock));
 
   /* Set up agent status cond/mutex */
-  MUTEX_NEW(agent->agent_status_lock);
-  MUTEX_INIT(agent->agent_status_lock);
-  COND_NEW(agent->agent_status_cond);
-  COND_INIT(agent->agent_status_cond);
+  new_Mutex(&(agent->agent_status_lock));
+  new_COND(&(agent->agent_status_cond));
 
   /* Set up run_lock mutex */
-  agent->run_lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  MUTEX_INIT(agent->run_lock);
+  new_Mutex(&(agent->run_lock));
 
   /* set flags and variables for the agent */
   agent->id = id;

@@ -75,8 +75,7 @@ ams_Initialize(mc_platform_p mc_platform)
   ams->run = 0;
 
   ams->waiting = 0;
-  ams->waiting_lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  MUTEX_INIT(ams->waiting_lock);
+  new_Mutex(&(ams->waiting_lock));
   ams->waiting_cond = (COND_T*)malloc(sizeof(COND_T));
   COND_INIT(ams->waiting_cond);
 

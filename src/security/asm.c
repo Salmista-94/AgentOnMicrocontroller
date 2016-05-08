@@ -58,8 +58,7 @@ asm_Initialize(mc_platform_p mc_platform)
   CHECK_NULL(mc_asm, exit(0););
 
   mc_asm->waiting = 0;
-  mc_asm->waiting_lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  MUTEX_INIT(mc_asm->waiting_lock);
+  new_Mutex(&(mc_asm->waiting_lock));
   mc_asm->waiting_cond = (COND_T*)malloc(sizeof(COND_T));
   COND_INIT(mc_ams->waiting_cond);
 

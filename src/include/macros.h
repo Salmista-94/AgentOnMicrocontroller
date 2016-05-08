@@ -375,6 +375,10 @@ pthread_cond_wait( queue->touched_signal, queue->thread_mutex )
   if(mutex == NULL) \
     fprintf(stderr, "Memory Error. %s:%d\n", __FILE__, __LINE__)
 
+#define new_Mutex(pointer) \  
+  MUTEX_NEW(pointer);      \
+  MUTEX_INIT(*pointer)
+
 
 /* **** *
  * COND *
@@ -390,6 +394,10 @@ pthread_cond_wait( queue->touched_signal, queue->thread_mutex )
 #define COND_INIT(cond) \
   *cond = CreateEvent(NULL, TRUE, TRUE, NULL);\
   ResetEvent(*cond)
+#define new_COND(pointer) \
+  COND_NEW(pointer);      \
+  COND_INIT(*pointer)
+
 /* Destroy */
 #define COND_DESTROY(cond)
 /* Functions */
