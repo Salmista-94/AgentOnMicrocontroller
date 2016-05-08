@@ -70,12 +70,17 @@
 
 #define SOCKET_INPUT_SIZE 4096
 
+
+#define Macro_MESSAGE_ReportError_and_Return() \
+          mc_platform->err = MC_ERR_MEMORY;return MC_ERR_MEMORY
+
+
 message_p
 message_New(void)
 {
   message_p message;
   message = (message_p)malloc(sizeof(message_t));
-  CHECK_NULL(message, exit(0););
+  Exit__when_CHECK_NULL(message, 0);
   message->addr = NULL;
   message->connect_id = 0;
   message->message_id = 0;
@@ -125,7 +130,7 @@ message_InitializeFromAgent(
   message->xml_root = agent_xml_compose(agent);
   /* If agent_xml_compose fails, that is a fatal error, since
    * 'agent' is gauranteed to be a valid agent. */
-  CHECK_NULL(message->xml_root, exit(0););
+  Exit__when_CHECK_NULL(message->xml_root, 0);
   message->message_body = mxmlSaveAllocString( 
       message->xml_root,
       MXML_NO_CALLBACK );
@@ -152,7 +157,7 @@ message_InitializeFromAgent(
         strlen(agent->home) + 1
        )
       );
-    CHECK_NULL(message->to_address, exit(0););
+    Exit__when_CHECK_NULL(message->to_address, 0);
     strcpy
       (
        message->to_address,
@@ -172,7 +177,7 @@ message_InitializeFromAgent(
         +1
        )
       );
-    CHECK_NULL( message->to_address, mc_platform->err = MC_ERR_MEMORY; return MC_ERR_MEMORY;);
+    CHECK_NULL( message->to_address, Macro_MESSAGE_ReportError_and_Return());
     strcpy(
         message->to_address,
         agent->datastate->tasks[ agent->datastate->task_progress ]->server_name 
@@ -188,7 +193,7 @@ message_InitializeFromAgent(
        sizeof(char) * 
        (strlen(message->to_address)+1)
       );
-    CHECK_NULL(buf, exit(0););
+    Exit__when_CHECK_NULL(buf, 0);
     strcpy(buf, message->to_address);
     destination_host = strtok_r(buf, ":", &save_ptr);
     destination_port_str = strtok_r(NULL, ":", &save_ptr);
@@ -217,7 +222,7 @@ message_InitializeFromConnection(
   char *buffer;
 
   message->addr = (struct sockaddr_in*)malloc(sizeof(struct sockaddr_in));
-  CHECK_NULL(message->addr, exit(0););
+  Exit__when_CHECK_NULL(message->addr, 0);
   *(message->addr) = connection->addr;
 
   message->connect_id = connection->connect_id;
@@ -229,9 +234,9 @@ message_InitializeFromConnection(
   message->target = NULL;
 
   buffer = (char*) malloc(sizeof(char) * (SOCKET_INPUT_SIZE + 1));
-  CHECK_NULL(buffer, exit(0););
+  Exit__when_CHECK_NULL(buffer, 0);
   message_string = (char*) malloc(sizeof(char) * (SOCKET_INPUT_SIZE + 1));
-  CHECK_NULL(message_string, exit(0););
+  Exit__when_CHECK_NULL(message_string, 0);
   message_string[0] = '\0';
   buffer[0] = '\0';
 
@@ -270,7 +275,7 @@ message_InitializeFromConnection(
          message_string, 
          sizeof(char) * (SOCKET_INPUT_SIZE+1) * i
         );
-      CHECK_NULL(message_string, exit(0););
+      Exit__when_CHECK_NULL(message_string, 0);
       buffer[0] = '\0';
     }
   }
@@ -279,7 +284,7 @@ message_InitializeFromConnection(
      sizeof(char) * 
      (strlen(message_string) + 1)
     );
-  CHECK_NULL(message->message_body, exit(0););
+  Exit__when_CHECK_NULL(message->message_body, 0);
   strcpy(message->message_body, message_string);
   free(message_string);
   message->xml_root = mxmlLoadString
@@ -352,18 +357,14 @@ message_InitializeFromString(
 
   message->message_body = 
     (char*)malloc( sizeof(char) * (strlen(string)+1));
-  CHECK_NULL(message->message_body, 
-      mc_platform->err = MC_ERR_MEMORY;
-      return MC_ERR_MEMORY; );
+  CHECK_NULL(message->message_body, Macro_MESSAGE_ReportError_and_Return());
   strcpy(message->message_body, string);
 
   message->update_name = NULL;
 
   if(destination_host != NULL) {
     destination = (char*)malloc(sizeof(char)*(strlen(destination_host) + 10));
-    CHECK_NULL(destination,
-        mc_platform->err = MC_ERR_MEMORY;
-        return MC_ERR_MEMORY; );
+    CHECK_NULL(destination, Macro_MESSAGE_ReportError_and_Return());
     sprintf(destination, "%s:%d", 
         destination_host,
         destination_port
@@ -909,7 +910,7 @@ message_send_Thread( LPVOID arg )
       // Now we should receive an HTTP response 
       buffer = (char*) malloc(sizeof(char) * (SOCKET_INPUT_SIZE + 2));
       memset(buffer, 0, sizeof(char) * (SOCKET_INPUT_SIZE + 2));
-      CHECK_NULL(buffer, exit(0););
+      Exit__when_CHECK_NULL(buffer, 0);
       mtp_http = mtp_http_New();
 			message_string = dynstring_New();
 			while(1) {

@@ -12,9 +12,9 @@ int syncListNodeInit(struct syncListNode_s *node) { /*{{{*/
     node->lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
     node->cond = (COND_T*)malloc(sizeof(COND_T));
     node->sem  = (SEMAPHORE_T*)malloc(sizeof(SEMAPHORE_T));
-    CHECK_NULL(node->lock, exit(1););
-    CHECK_NULL(node->cond, exit(1););
-    CHECK_NULL(node->sem , exit(1););
+    Exit__when_CHECK_NULL(node->lock, 1);
+    Exit__when_CHECK_NULL(node->cond, 1);
+    Exit__when_CHECK_NULL(node->sem , 1);
 
     MUTEX_INIT(node->lock);
     COND_INIT(node->cond);
@@ -26,13 +26,13 @@ struct syncListNode_s*
 syncListNodeNew(void) {
     struct syncListNode_s *ret;
     ret = (struct syncListNode_s*)malloc(sizeof(struct syncListNode_s));
-    CHECK_NULL(ret, exit(1););
+    Exit__when_CHECK_NULL(ret, 1);
     ret->lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
     ret->cond = (COND_T*)malloc(sizeof(COND_T));
     ret->sem  = (SEMAPHORE_T*)malloc(sizeof(SEMAPHORE_T));
-    CHECK_NULL(ret->lock, exit(1););
-    CHECK_NULL(ret->cond, exit(1););
-    CHECK_NULL(ret->sem , exit(1););
+    Exit__when_CHECK_NULL(ret->lock, 1);
+    Exit__when_CHECK_NULL(ret->cond, 1);
+    Exit__when_CHECK_NULL(ret->sem , 1);
 
     MUTEX_INIT(ret->lock);
     COND_INIT(ret->cond);

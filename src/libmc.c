@@ -1615,7 +1615,7 @@ MC_DeleteAgent(MCAgent_t agent) /*{{{*/
     struct mc_platform_s* mc_platform;
     char* agentName;
     /* Error Checking */
-    CHECK_NULL(agent, return MC_ERR_INVALID;);
+    Return_arg__when_CHECK_NULL(agent, MC_ERR_INVALID);
 
     /* If the agent has a workgroup code, then the user must use MC_DeleteAgentWG() */
     if ( agent->wg_code != NULL ) {
@@ -1646,7 +1646,7 @@ MC_DeleteAgentWG(MCAgent_t calling_agent, MCAgent_t agent) /*{{{*/
     struct mc_platform_s* mc_platform;
     char* agentName;
     /* Error Checking */
-    CHECK_NULL(agent, return MC_ERR_INVALID;);
+    Return_arg__when_CHECK_NULL(agent, MC_ERR_INVALID);
 
     /* The agents must belong to the same workgroup*/
     if (agent->wg_code != NULL) {
@@ -2491,11 +2491,11 @@ MC_RegisterService( /*{{{*/
   strcpy((char*)req_node->command, "register");
 
   new_node = (df_node_t*)malloc(sizeof(df_node_t));
-  CHECK_NULL(new_node, return MC_ERR_MEMORY);
+  Return_arg__when_CHECK_NULL(new_node, MC_ERR_MEMORY);
 
   /* Init the lock */
   new_node->lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  CHECK_NULL(new_node->lock, return MC_ERR_MEMORY);
+  Return_arg__when_CHECK_NULL(new_node->lock, MC_ERR_MEMORY);
   MUTEX_INIT(new_node->lock);
 
   /* Init the agentID */
@@ -2509,7 +2509,7 @@ MC_RegisterService( /*{{{*/
   if (agent==NULL) {
     new_node->agent_name = 
       (char*)malloc(sizeof(char)*(strlen(agentName)+1));
-    CHECK_NULL(new_node->agent_name, return MC_ERR_MEMORY;);
+    Return_arg__when_CHECK_NULL(new_node->agent_name, MC_ERR_MEMORY);
     strcpy(new_node->agent_name, agentName);
   } else {
     new_node->agent_name = 
@@ -2517,7 +2517,7 @@ MC_RegisterService( /*{{{*/
           sizeof(char) * 
           (strlen(agent->name)+1)
           );
-    CHECK_NULL(new_node->agent_name, return MC_ERR_MEMORY;);
+    Return_arg__when_CHECK_NULL(new_node->agent_name, MC_ERR_MEMORY);
     strcpy(new_node->agent_name, agent->name);
   }
 
@@ -2525,12 +2525,12 @@ MC_RegisterService( /*{{{*/
   new_node->service_names = (char**)malloc(
       sizeof(char*) * numServices
       );
-  CHECK_NULL(new_node->service_names, return MC_ERR_MEMORY;);
+  Return_arg__when_CHECK_NULL(new_node->service_names, MC_ERR_MEMORY);
   for (i = 0; i < numServices; i++) {
     new_node->service_names[i] = (char*) malloc(
         sizeof(char) * (strlen(serviceNames[i]) + 1)
         );
-    CHECK_NULL(new_node->service_names[i], return MC_ERR_MEMORY;);
+    Return_arg__when_CHECK_NULL(new_node->service_names[i], MC_ERR_MEMORY);
     strcpy(
         new_node->service_names[i],
         serviceNames[i]
@@ -2634,11 +2634,11 @@ MC_SearchForService( /*{{{*/
   df_search_results_p results;
   df_request_list_node_p request;
   search = df_request_search_New();
-  CHECK_NULL(search, return MC_ERR_MEMORY;);
+  Return_arg__when_CHECK_NULL(search,  MC_ERR_MEMORY);
   results = (df_search_results_p)malloc(sizeof(df_search_results_t));
-  CHECK_NULL(results, return MC_ERR_MEMORY;);
+  Return_arg__when_CHECK_NULL(results, MC_ERR_MEMORY);
   request = df_request_list_node_New();
-  CHECK_NULL(request, return MC_ERR_MEMORY;);
+  Return_arg__when_CHECK_NULL(request, MC_ERR_MEMORY);
 
 
   search->search_results = results;
@@ -3291,7 +3291,7 @@ MC_AclSend_chdl(void* varg)
   ChVaList_t ap;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -3546,7 +3546,7 @@ MC_AddAgent_chdl(void *varg) /*{{{*/
   ChVaList_t ap;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -3811,7 +3811,7 @@ MC_Barrier_chdl(void *varg) /*{{{*/
   int id;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -3834,7 +3834,7 @@ MC_BarrierDelete_chdl(void *varg) /*{{{*/
   int id;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -3858,7 +3858,7 @@ MC_BarrierInit_chdl(void *varg) /*{{{*/
   int num_procs;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -3882,7 +3882,7 @@ MC_CondBroadcast_chdl(void *varg) /*{{{*/
   int id;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4073,7 +4073,7 @@ MC_CondSignal_chdl(void *varg) /*{{{*/
   int id;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4096,7 +4096,7 @@ MC_CondReset_chdl(void *varg) /*{{{*/
   int id;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4119,7 +4119,7 @@ MC_CondWait_chdl(void *varg) /*{{{*/
   int id;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4211,7 +4211,7 @@ MC_DeregisterService_chdl(void *varg) /*{{{*/
   int retval;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4234,7 +4234,7 @@ MC_End_chdl(void *varg) /* {{{ */
   int retval;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   retval = MC_End(temp_attr);
@@ -4254,7 +4254,7 @@ MC_FindAgentByID_chdl(void *varg) /*{{{*/
   int id;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4277,7 +4277,7 @@ MC_FindAgentByName_chdl(void *varg) /*{{{*/
   const char *name;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4416,7 +4416,7 @@ MC_HaltAgency_chdl(void *varg)
   extern mc_platform_p g_mc_platform;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   retval = MC_HaltAgency(temp_attr);
@@ -4456,7 +4456,7 @@ MC_MutexLock_chdl(void *varg) /*{{{*/
   int retval;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4480,7 +4480,7 @@ MC_MutexUnlock_chdl(void *varg) /*{{{*/
   int retval;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4523,7 +4523,7 @@ MC_RegisterService_chdl(void *varg) /*{{{*/
   int numServices;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4553,7 +4553,7 @@ MC_ResumeAgency_chdl(void *varg)
   extern mc_platform_p g_mc_platform;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   retval = MC_ResumeAgency(temp_attr);
@@ -4571,7 +4571,7 @@ MC_RetrieveAgent_chdl(void *varg) /*{{{*/
   MCAgent_t agent;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   agent = MC_RetrieveAgent(temp_attr);
@@ -4652,7 +4652,7 @@ MC_SearchForService_chdl(void *varg) /*{{{*/
   int* numResults;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4688,7 +4688,7 @@ MC_SemaphorePost_chdl(void *varg) /*{{{*/
   int retval;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4712,7 +4712,7 @@ MC_SemaphoreWait_chdl(void *varg) /*{{{*/
   int retval;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4735,7 +4735,7 @@ MC_SendAgentMigrationMessage_chdl(void *varg) /*{{{*/
   ChVaList_t ap;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4780,7 +4780,7 @@ MC_SendSteerCommand_chdl(void *varg) /*{{{*/
   ChVaList_t ap;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4821,7 +4821,7 @@ MC_SetDefaultAgentStatus_chdl(void *varg) /*{{{*/
   ChVaList_t ap;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(1););
+  Exit_CHECK_NULL(temp_attr, 1));
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4844,7 +4844,7 @@ MC_SyncDelete_chdl(void *varg) /*{{{*/
   int id;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);
@@ -4867,7 +4867,7 @@ MC_SyncInit_chdl(void *varg) /*{{{*/
   int id;
 
   temp_attr = (MCAgency_t)malloc(sizeof(struct agency_s));
-  CHECK_NULL(temp_attr, exit(-1));
+  Exit_CHECK_NULL(temp_attr, -1);
   temp_attr->mc_platform = g_mc_platform;
 
   Ch_VaStart(interp, ap, varg);

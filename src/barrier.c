@@ -48,11 +48,11 @@ barrier_node_Initialize(int id, int num_registered)
 
   /* Memory Allocation */
   node = (barrier_node_p)malloc(sizeof(barrier_node_t));
-  CHECK_NULL(node, return NULL;);
+  Return_arg__when_CHECK_NULL(node, NULL);
   node->lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  CHECK_NULL(node->lock, return NULL;);
+  Return_arg__when_CHECK_NULL(node->lock, NULL);
   node->cond = (COND_T*)malloc(sizeof(COND_T));
-  CHECK_NULL(node->cond, return NULL;);
+  Return_arg__when_CHECK_NULL(node->cond, NULL);
 
   /* Sync Init */
   MUTEX_INIT(node->lock);

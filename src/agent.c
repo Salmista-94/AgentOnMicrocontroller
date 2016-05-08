@@ -97,7 +97,7 @@ int agent_AddPersistentVariable(agent_p agent, int task_num, const char* var_nam
   CH_DATATYPE_SIZE(agent_variable_data->data_type, data_type_size);
 
   agent_variable_data->data = (void*)malloc(size * data_type_size);
-  CHECK_NULL(agent_variable_data->data, exit(0));
+  Exit_CHECK_NULL(agent_variable_data->data, 0);
   /* Copy the data over from the agent */
   /* For now, only support statically allocated global vars. */
   progress = agent->datastate->task_progress;

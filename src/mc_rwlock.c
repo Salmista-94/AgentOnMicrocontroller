@@ -52,9 +52,9 @@ int mc_rwlock_init(mc_rwlock_p rwlock)
 
     /* Alloc sync */
     rwlock->lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-    CHECK_NULL(rwlock->lock, return MC_ERR_MEMORY;);
+    Return_arg__when_CHECK_NULL(rwlock->lock, MC_ERR_MEMORY);
     rwlock->cond = (COND_T*)malloc(sizeof(COND_T));
-    CHECK_NULL(rwlock->cond, return MC_ERR_MEMORY;);
+    Return_arg__when_CHECK_NULL(rwlock->cond, MC_ERR_MEMORY);
 
     /* Init sync */
     MUTEX_INIT(rwlock->lock);

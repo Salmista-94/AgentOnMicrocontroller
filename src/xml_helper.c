@@ -100,7 +100,7 @@ xml_get_cdata(const mxml_node_t *node) {
     if ( strcmp(tmp, "]]") ) {
         return NULL;
     }
-    CHECK_NULL(tmp, return NULL);
+    Return_arg__when_CHECK_NULL(tmp, NULL);
     *tmp = '\0';
     return cdata_str;
 }
@@ -213,7 +213,7 @@ char * xml_get_text(const mxml_node_t *node)
                 break;
             }
         } else { /* Should never get here */
-            CHECK_NULL( NULL, exit(0) );
+            Exit__when_CHECK_NULL( NULL, 0);
         }
     }
     return ret;
@@ -238,7 +238,7 @@ xml_new_cdata(mxml_node_t* parent, const char* text) {
     mxml_node_t * node;
     namelen = (strlen(text) + strlen("![CDATA[]]")+1) * sizeof(char);
     tmp = (char*)malloc(namelen);
-    CHECK_NULL(tmp, exit(0) );
+    Exit__when_CHECK_NULL(tmp, 0);
     *tmp = '\0';
     strcat(tmp, "![CDATA[");
     strcat(tmp, text);

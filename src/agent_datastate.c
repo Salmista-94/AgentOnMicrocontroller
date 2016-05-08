@@ -116,7 +116,7 @@ agent_datastate_New( void )
 {
   agent_datastate_p agent_datastate;
   agent_datastate = (agent_datastate_p)malloc(sizeof(agent_datastate_t));
-  CHECK_NULL(agent_datastate, exit(0););
+  Exit_CHECK_NULL(agent_datastate, 0);
   
   agent_datastate->agent_code = NULL;
   agent_datastate->tasks = NULL;

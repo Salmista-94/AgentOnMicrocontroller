@@ -47,7 +47,7 @@ interpreter_variable_data_New(void)
 {
   interpreter_variable_data_p agent_variable_data;
   agent_variable_data = (interpreter_variable_data_p)malloc(sizeof(interpreter_variable_data_t));
-  CHECK_NULL(agent_variable_data, exit(0););
+  Exit_CHECK_NULL(agent_variable_data, 0);
   agent_variable_data->name = NULL;
   agent_variable_data->size = 0;
   agent_variable_data->data_type = (ChType_t)0;
@@ -102,7 +102,7 @@ interpreter_variable_data_InitializeFromAgent(agent_p agent)
     CH_DATATYPE_SIZE(agent_return->data_type, data_type_size);
 
     agent_return->data = (void*)malloc(size * data_type_size);
-    CHECK_NULL(agent_return->data, exit(0));
+    Exit_CHECK_NULL(agent_return->data, 0);
     /* Copy the data over from the agent */
     /* For now, only support statically allocated global vars. */
     progress = agent->datastate->task_progress;
@@ -183,7 +183,7 @@ interpreter_variable_data_Initialize(agent_p agent, const char* varname)
   CH_DATATYPE_SIZE(interp_variable->data_type, data_type_size);
 
   interp_variable->data = (void*)malloc(size * data_type_size);
-  CHECK_NULL(interp_variable->data, exit(0));
+  Exit_CHECK_NULL(interp_variable->data, 0);
   /* Copy the data over from the agent */
   /* For now, only support statically allocated global vars. */
   i = 0;

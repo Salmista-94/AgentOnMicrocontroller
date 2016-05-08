@@ -55,7 +55,7 @@ asm_Initialize(mc_platform_p mc_platform)
 {
   mc_asm_p mc_asm;
   mc_asm = (mc_asm_p)malloc(sizeof(mc_asm_t));
-  CHECK_NULL(mc_asm, exit(0););
+  Exit__when_CHECK_NULL(mc_asm, 0);
 
   mc_asm->waiting = 0;
   new_Mutex(&(mc_asm->waiting_lock));
@@ -84,7 +84,7 @@ asm_RequestInitFromAddr(mc_platform_p mc_platform, char* addr)
      sizeof(char) * 
      (strlen(addr)+1)
     );
-  CHECK_NULL(message->to_address, exit(0); );
+  Exit__when_CHECK_NULL(message->to_address, 0);
 
   strcpy(message->to_address, addr);
 
@@ -113,7 +113,7 @@ asm_SendEncryptionData(
     (
      sizeof(char) * (strlen(address)+1)
     );
-  CHECK_NULL(message->to_address, exit(0););
+  Exit__when_CHECK_NULL(message->to_address, 0);
   strcpy(message->to_address, address);
 
 /*  if(_message->addr != NULL) {

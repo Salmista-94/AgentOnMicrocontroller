@@ -30,9 +30,9 @@ dh_data_p dh_data_Initialize(void)
   dh_data_p dh_data;
 
   buf = (char*)malloc(sizeof(char) * 1024);
-  CHECK_NULL(buf, exit(0););
+  Exit__when_CHECK_NULL(buf, 0);
   dh_data = (dh_data_p)malloc(sizeof(dh_data_t));
-  CHECK_NULL(dh_data, exit(0););
+  Exit__when_CHECK_NULL(dh_data, 0);
 
   memset(dh_data, 0, sizeof(dh_data_t));
 

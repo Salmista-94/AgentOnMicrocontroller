@@ -48,6 +48,11 @@
 #include "include/xml_parser.h"
 #include "include/xml_helper.h"
 
+
+#define Macro_XML_ReportError_and_Return(attrb) \
+              attrb=NULL;return MC_SUCCESS
+
+
 /* *** */
 /* agent_xml_parse */
 error_code_t agent_xml_parse(agent_p agent)
@@ -174,7 +179,7 @@ agent_xml_parse__name(agent_p agent, xml_parser_p xml_parser)
   name_node = xml_parser->node;
 
   text = xml_get_text( name_node );
-  CHECK_NULL(text, return MC_ERR_PARSE;);
+  Return_arg__when_CHECK_NULL(text, MC_ERR_PARSE);
 
   agent->name = (char*)malloc(
       sizeof(char)*(strlen(text)+1)
@@ -202,7 +207,7 @@ agent_xml_parse__owner(agent_p agent, xml_parser_p xml_parser)
   owner_node = xml_parser->node;
 
   text = xml_get_text( owner_node );
-  CHECK_NULL(text, agent->owner=NULL;return MC_SUCCESS;);
+  CHECK_NULL(text, Macro_XML_ReportError_and_Return(agent->owner));
   agent->owner = (char*)malloc(
       sizeof(char)*(strlen(text)+1)
       );
@@ -228,7 +233,7 @@ agent_xml_parse__home(agent_p agent, xml_parser_p xml_parser)
   }
   home_node = xml_parser->node;
   text = xml_get_text( home_node );
-  CHECK_NULL(text, agent->home=NULL;return MC_SUCCESS;);
+  CHECK_NULL(text, Macro_XML_ReportError_and_Return(agent->home));
   agent->home = (char*)malloc(
       sizeof(char)*(strlen(text)+1)
       );
@@ -255,7 +260,7 @@ agent_xml_parse__sender(agent_p agent, xml_parser_p xml_parser)
   sender_node = xml_parser->node;
   text = xml_get_text( sender_node );
   /* If there is no text, just return... */
-  CHECK_NULL(text, agent->sender=NULL;return MC_SUCCESS; );
+  CHECK_NULL(text, Macro_XML_ReportError_and_Return(agent->sender));
 
   agent->sender = (char*)malloc(
       sizeof(char)*(strlen(text)+1)
@@ -445,7 +450,7 @@ agent_xml_parse__task(agent_p agent, xml_parser_p xml_parser, int index)
   const char* attribute;
   mxml_node_t* task_node;
   error_code_t err_code = MC_SUCCESS;
-  CHECK_NULL(xml_parser->node, return MC_ERR_PARSE;);
+  Return_arg__when_CHECK_NULL(xml_parser->node, MC_ERR_PARSE);
   task_node = xml_parser->node;
 
   /* Parse the multiple DATA nodes */
@@ -526,14 +531,14 @@ agent_xml_parse__task(agent_p agent, xml_parser_p xml_parser, int index)
       (mxml_node_t*)task_node,
       "num"
       );
-  CHECK_NULL(attribute, return MC_ERR_PARSE;);
+  Return_arg__when_CHECK_NULL(attribute, MC_ERR_PARSE);
 
   /* 'server' - The server this task should be performed on */
   attribute = mxmlElementGetAttr(
       (mxml_node_t*)task_node,
       "server"
       );
-  CHECK_NULL(attribute, return MC_ERR_PARSE;);
+  Return_arg__when_CHECK_NULL(attribute, MC_ERR_PARSE);
   agent->datastate->tasks[index]->server_name = 
     (char*)malloc(sizeof(char) * (strlen(attribute)+1) );
   strcpy(
@@ -550,7 +555,7 @@ agent_xml_parse__task(agent_p agent, xml_parser_p xml_parser, int index)
   } else {
     agent->datastate->tasks[index]->var_name = strdup(attribute);
   }
-  CHECK_NULL(agent->datastate->tasks[index]->var_name, exit(1););
+  Exit__when_CHECK_NULL(agent->datastate->tasks[index]->var_name, 1);
 
   return err_code;
 }
@@ -717,7 +722,7 @@ agent_xml_parse__file(agent_p agent, xml_parser_p xml_parser, int index)
   }
   file_node = xml_parser->node;
   text = xml_get_text(file_node);
-  CHECK_NULL(text, return MC_ERR_PARSE;);
+  Return_arg__when_CHECK_NULL(text, MC_ERR_PARSE);
 
   /* Get the name attribute */
   name = mxmlElementGetAttr(
@@ -1131,14 +1136,14 @@ message_xml_parse__message(message_p message, xml_parser_p xml_parser)
        sizeof(char) * 
        (strlen(attribute)+1)
       );
-    CHECK_NULL(message->from_address, exit(0););
+    Exit__when_CHECK_NULL(message->from_address, 0);
     strcpy(message->from_address, attribute);
     buf = (char*)malloc
       (
        sizeof(char) * 
        (strlen(message->from_address)+1)
       );
-    CHECK_NULL(buf, exit(0););
+    Exit__when_CHECK_NULL(buf, 0);
     strcpy(buf, message->from_address);
     hostname = strtok_r(buf, ":", &save_ptr);
     port_str = strtok_r(NULL, ":", &save_ptr);
