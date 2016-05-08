@@ -162,7 +162,7 @@ typedef name##_t* name##_p;
 	}
 
 #define THREAD_EXIT() \
-  pthread_exit(NULL)
+    pthread_exit(NULL)
 
 /* ***** */
 /* MUTEX */
@@ -170,147 +170,187 @@ typedef name##_t* name##_p;
 
 /* Typedef */
 #define MUTEX_T pthread_mutex_t
+
 /* Init */
 #define MUTEX_INIT(mutex) \
-  pthread_mutex_init(mutex, NULL)
+    pthread_mutex_init(mutex, NULL)
+
 /* Destroy */
 #define MUTEX_DESTROY(mutex) \
-  pthread_mutex_destroy(mutex)
+    pthread_mutex_destroy(mutex)
+
 /* functions */
+
 #define MUTEX_LOCK(mutex)                                                   \
-  if (pthread_mutex_lock( mutex ))                                        \
-fprintf(stderr, "pthread lock error: %s:%d\n", __FILE__, __LINE__)
+    if (pthread_mutex_lock( mutex ))                                        \
+        fprintf(stderr, "pthread lock error: %s:%d\n", __FILE__, __LINE__)
+
 #define MUTEX_UNLOCK(mutex) \
-  pthread_mutex_unlock( mutex )
-#define MUTEX_NEW(mutex) \
-  mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t)); \
-  if (mutex == NULL)  \
-    fprintf(stderr, "Memory Error. %s:%d\n", __FILE__,__LINE__); \
+    pthread_mutex_unlock( mutex )
+
+#define MUTEX_NEW(mutex_p)                                           \
+    *mutex_p = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));    \
+    if (*mutex_p == NULL)                                            \
+        fprintf(stderr, "Memory Error. %s:%d\n", __FILE__,__LINE__); \
 
 /* **** *
  * COND *
  * **** */
+
 /* Typedef */
 #define COND_T pthread_cond_t
+
 /* Init */
 #define COND_INIT(cond) \
-  pthread_cond_init(cond, NULL)
+    pthread_cond_init(cond, NULL)
+
 /* New */
-#define COND_NEW(cond) \
-  cond = (pthread_cond_t*)malloc(sizeof(pthread_cond_t)); \
-  if (cond == NULL)  \
-    fprintf(stderr, "Memory Error. %s:%d\n", __FILE__,__LINE__); \
+#define COND_NEW(cond)                                               \
+    cond = (pthread_cond_t*)malloc(sizeof(pthread_cond_t));          \
+    if (cond == NULL)                                                \
+        fprintf(stderr, "Memory Error. %s:%d\n", __FILE__,__LINE__); \
+
 /* Destroy */
 #define COND_DESTROY(cond) \
   pthread_cond_destroy(cond)
+
 /* functions */
+
 #define COND_WAIT( cond , mutex ) \
-  pthread_cond_wait(cond, mutex )
+    pthread_cond_wait(cond, mutex )
+
 /* Wait until 'test' is true */
-#define COND_SLEEP( cond, mutex, test )       \
-  if (pthread_mutex_lock( mutex ))    \
-printf("pthread lock error: %s:%d\n", __FILE__, __LINE__); \
-if (!test) { \
-  pthread_cond_wait( cond, mutex ); \
-} 
+#define COND_SLEEP( cond, mutex, test )                            \
+    if (pthread_mutex_lock( mutex ))                               \
+        printf("pthread lock error: %s:%d\n", __FILE__, __LINE__); \
+    if (!test) {                                                   \
+        pthread_cond_wait( cond, mutex );                          \
+    } 
+
 #define COND_RESET( cond, mutex ) \
-  pthread_mutex_unlock( mutex );
+    pthread_mutex_unlock( mutex );
+
 #define COND_SLEEP_ACTION(cond, mutex, action) \
-  if (pthread_mutex_lock( mutex )) \
-printf("pthread lock error: %s:%d\n", __FILE__, __LINE__); \
-action; \
-pthread_cond_wait( cond, mutex ); 
+    if (pthread_mutex_lock( mutex )) \
+        printf("pthread lock error: %s:%d\n", __FILE__, __LINE__); \
+    action; \
+    pthread_cond_wait( cond, mutex ); 
+
 #define SIGNAL(cond, mutex, action) \
-  pthread_mutex_lock( mutex ); \
-action; \
-pthread_cond_signal( cond ); \
-pthread_mutex_unlock( mutex )
+    pthread_mutex_lock( mutex ); \
+    action; \
+    pthread_cond_signal( cond ); \
+    pthread_mutex_unlock( mutex )
+
 #define COND_BROADCAST(cond) \
   pthread_cond_broadcast( cond )
+
 #define COND_SIGNAL(cond) \
   pthread_cond_signal( cond )
 
 /* ********* *
  * SEMAPHORE *
  * ********* */
+
 /* Typedef */
 #define SEMAPHORE_T sem_t
+
 /* Init */
 #define SEMAPHORE_INIT(sem) \
   sem_init(sem, 0, 0)
+
 /* Destroy */
 #define SEMAPHORE_DESTROY(sem) \
   sem_destroy(sem)
+
 /* Functions */
+
 #define SEMAPHORE_WAIT(sem) \
   sem_wait(sem)
+
 #define SEMAPHORE_POST(sem) \
   sem_post(sem)
 
 /* ******* *
  * RW_LOCK *
  * ******* */
+
 /* Typedef */
 #ifdef HAVE_PTHREAD_RWLOCK_T
-#define RWLOCK_T pthread_rwlock_t
+#   define RWLOCK_T pthread_rwlock_t
 #else
-#define RWLOCK_T mc_rwlock_t
+#   define RWLOCK_T mc_rwlock_t
 #endif
+
 /* Init */
 #ifdef HAVE_PTHREAD_RWLOCK_T
-#define RWLOCK_INIT(rwlock) \
-  pthread_rwlock_init(rwlock, NULL)
+#   define RWLOCK_INIT(rwlock) \
+          pthread_rwlock_init(rwlock, NULL)
 #else
-#define RWLOCK_INIT(rwlock) \
-  mc_rwlock_init(rwlock)
+#   define RWLOCK_INIT(rwlock) \
+          mc_rwlock_init(rwlock)
 #endif
+
 /* Destroy */
 #ifdef HAVE_PTHREAD_RWLOCK_T
-#define RWLOCK_DESTROY(rwlock) \
-  pthread_rwlock_destroy(rwlock)
+#  define RWLOCK_DESTROY(rwlock) \
+          pthread_rwlock_destroy(rwlock)
 #else
-#define RWLOCK_DESTROY(rwlock) \
-  mc_rwlock_destroy(rwlock)
+#  define RWLOCK_DESTROY(rwlock) \
+          mc_rwlock_destroy(rwlock)
 #endif
+
 /* Functions */
 #ifdef HAVE_PTHREAD_RWLOCK_T
-#define RWLOCK_RDLOCK(rwlock) \
+
+#define RWLOCK_RDLOCK(rwlock)        \
   if (pthread_rwlock_rdlock(rwlock)) \
-fprintf(stderr, "rwlock error: %s:%d\n", __FILE__, __LINE__)
-#define RWLOCK_RDUNLOCK(rwlock) \
+    fprintf(stderr, "rwlock error: %s:%d\n", __FILE__, __LINE__)
+
+#define RWLOCK_RDUNLOCK(rwlock)      \
   if (pthread_rwlock_unlock(rwlock)) \
-fprintf(stderr, "rwunlock error: %s:%d\n", __FILE__, __LINE__)
-#define RWLOCK_WRLOCK(rwlock) \
+    fprintf(stderr, "rwunlock error: %s:%d\n", __FILE__, __LINE__)
+
+#define RWLOCK_WRLOCK(rwlock)        \
   if (pthread_rwlock_wrlock(rwlock)) \
-fprintf(stderr, "rwlock error: %s:%d\n", __FILE__, __LINE__)
-#define RWLOCK_WRUNLOCK(rwlock) \
+    fprintf(stderr, "rwlock error: %s:%d\n", __FILE__, __LINE__)
+
+#define RWLOCK_WRUNLOCK(rwlock)      \
   if (pthread_rwlock_unlock(rwlock)) \
-fprintf(stderr, "rwunlock error: %s:%d\n", __FILE__, __LINE__)
+    fprintf(stderr, "rwunlock error: %s:%d\n", __FILE__, __LINE__)
+
 #else
+
 #define RWLOCK_RDLOCK(rwlock) \
   mc_rwlock_rdlock(rwlock)
+
 #define RWLOCK_RDUNLOCK(rwlock) \
   mc_rwlock_rdunlock(rwlock)
+
 #define RWLOCK_WRLOCK(rwlock) \
   mc_rwlock_wrlock(rwlock)
+
 #define RWLOCK_WRUNLOCK(rwlock) \
   mc_rwlock_wrunlock(rwlock)
+
 #endif
 
 
 /* ***************** *
  * SYSTEM QUEUE SYNC *
  * ***************** */
-#define WAKE_QUEUE(queue, action)                \
-  if (pthread_mutex_trylock( queue->lock ) == 0) {    \
-    action;                                                 \
-    pthread_cond_signal( queue->cond);           \
+#define WAKE_QUEUE(queue, action)                  \
+  if (pthread_mutex_trylock( queue->lock ) == 0) { \
+    action;                                        \
+    pthread_cond_signal( queue->cond);             \
     pthread_mutex_unlock( queue->lock);            \
-  }                                           
+  }    
+
 #define SLEEP_QUEUE( queue )                                        \
   if (pthread_mutex_lock( queue->thread_mutex ))                  \
-printf("pthread lock error: %s:%d\n", __FILE__, __LINE__);  \
-pthread_cond_wait( queue->touched_signal, queue->thread_mutex )
+      printf("pthread lock error: %s:%d\n", __FILE__, __LINE__);  \
+  pthread_cond_wait( queue->touched_signal, queue->thread_mutex )
+
 #define SLEEP_RESET( queue )                        \
   pthread_mutex_unlock( queue->thread_mutex )
 
@@ -323,21 +363,22 @@ pthread_cond_wait( queue->touched_signal, queue->thread_mutex )
 
 #define MC_SOCKET_ERROR() \
   fprintf(stderr, "Socket error: %d\n", WSAGetLastError())
+
 /* ******* *
  * THREADS *
  * ******* */
 #ifndef THREAD_T
-#define THREAD_T HANDLE
+# define THREAD_T HANDLE
 #endif
 
 #define THREAD_CREATE(thread_handle, function, arg) \
-  *(thread_handle) = CreateThread( \
-      NULL, \
-      (SIZE_T)stack_size, \
-      function, \
-      arg, \
-      0, \
-      NULL \
+  *(thread_handle) = CreateThread(                  \
+      NULL,                                         \
+      (SIZE_T)stack_size,                           \
+      function,                                     \
+      arg,                                          \
+      0,                                            \
+      NULL                                          \
       )
 
 #define THREAD_CANCEL(thread_handle)  \
@@ -356,23 +397,30 @@ pthread_cond_wait( queue->touched_signal, queue->thread_mutex )
 /* ***** */
 /* MUTEX */
 /* ***** */
+
 /* Typedef */
 #define MUTEX_T HANDLE
+
 /* Init */
 #define MUTEX_INIT(mutex) \
   *mutex = CreateMutex(NULL, FALSE, NULL)
+
 /* Destroy */
 #define MUTEX_DESTROY(mutex)
+
 /* Functions */
-#define MUTEX_LOCK(mutex)           \
-  WaitForSingleObject(            \
-      *mutex ,                 \
+
+#define MUTEX_LOCK(mutex) \
+  WaitForSingleObject(    \
+      *mutex ,            \
       INFINITE)
-#define MUTEX_UNLOCK(mutex)         \
+
+#define MUTEX_UNLOCK(mutex) \
   ReleaseMutex( *mutex )
-#define MUTEX_NEW(mutex) \
-  mutex = (HANDLE*)malloc(sizeof(HANDLE)); \
-  if(mutex == NULL) \
+
+#define MUTEX_NEW(mutex_p)                    \
+  *mutex_p = (HANDLE*)malloc(sizeof(HANDLE)); \
+  if(*mutex_p == NULL)                        \
     fprintf(stderr, "Memory Error. %s:%d\n", __FILE__, __LINE__)
 
 #define new_Mutex(pointer) \  
@@ -383,45 +431,56 @@ pthread_cond_wait( queue->touched_signal, queue->thread_mutex )
 /* **** *
  * COND *
  * **** */
+
 /* Typedef */
 #define COND_T HANDLE
+
 /* New */
-#define COND_NEW(cond) \
-  cond = (HANDLE*)malloc(sizeof(HANDLE)); \
-  if(cond == NULL) \
+#define COND_NEW(cond_p)                    \
+  cond_p = (HANDLE*)malloc(sizeof(HANDLE)); \
+  if(cond_p == NULL)                        \
     fprintf(stderr, "Memory Error. %s:%d\n", __FILE__, __LINE__)
+
 /* Init */
-#define COND_INIT(cond) \
-  *cond = CreateEvent(NULL, TRUE, TRUE, NULL);\
+#define COND_INIT(cond)                        \
+  *cond = CreateEvent(NULL, TRUE, TRUE, NULL); \
   ResetEvent(*cond)
+
 #define new_COND(pointer) \
   COND_NEW(pointer);      \
   COND_INIT(*pointer)
 
 /* Destroy */
 #define COND_DESTROY(cond)
+
 /* Functions */
 
 #define COND_WAIT( cond , mutex ) \
-ResetEvent(*cond); \
-ReleaseMutex(*mutex); \
-WaitForSingleObject( *cond, INFINITE)
+  ResetEvent(*cond); \
+  ReleaseMutex(*mutex); \
+  WaitForSingleObject( *cond, INFINITE)
+
 #define COND_SLEEP( cond, mutex, test )   \
   ResetEvent( *cond );             \
-if (!test){ \
-  WaitForSingleObject( *cond, INFINITE); \
-}
+  if (!test){ \
+     WaitForSingleObject( *cond, INFINITE); \
+  }
+
 #define COND_RESET( cond, mutex ) \
 	ResetEvent(*cond)
+
 #define COND_SLEEP_ACTION(cond, mutex, action) \
   ResetEvent( *cond ); \
-action; \
-WaitForSingleObject( *cond, INFINITE)
+  action; \
+  WaitForSingleObject( *cond, INFINITE)
+
 #define SIGNAL(cond, mutex, action) \
   action; \
 SetEvent( *cond )
+
 #define COND_BROADCAST(cond) \
   PulseEvent(*cond)
+
 #define COND_SIGNAL(cond) \
   SetEvent(*cond)
 
@@ -429,8 +488,10 @@ SetEvent( *cond )
 /* ********* *
  * SEMAPHORE *
  * ********* */
+
 /* Typedef */
 #define SEMAPHORE_T HANDLE
+
 /* Init */
 #define SEMAPHORE_INIT(sem) \
   *sem = CreateSemaphore( \
@@ -438,11 +499,15 @@ SetEvent( *cond )
       0, \
       1024, \
       NULL ) 
+
 /* Destroy */
 #define SEMAPHORE_DESTROY(sem) 
+
 /* Functions */
+
 #define SEMAPHORE_WAIT(sem) \
   WaitForSingleObject(sem, INFINITE)
+
 #define SEMAPHORE_POST(sem) \
   ReleaseSemaphore(sem, 1, NULL)
 
@@ -450,20 +515,29 @@ SetEvent( *cond )
 /* ******* *
  * RW_LOCK *
  * ******* */
+
 /* Typedef */
 #define RWLOCK_T mc_rwlock_t
+
 /* Init */
-#define RWLOCK_INIT(rwlock) \
+#define RWLOCK_INIT(rwlock)     \
   mc_rwlock_init(rwlock)
+
 /* Destroy */
-#define RWLOCK_DESTROY(rwlock) mc_rwlock_destroy(rwlock)
+#define RWLOCK_DESTROY(rwlock)  \
+  mc_rwlock_destroy(rwlock)
+
 /* Functions */
-#define RWLOCK_RDLOCK(rwlock) \
+
+#define RWLOCK_RDLOCK(rwlock)   \
   mc_rwlock_rdlock(rwlock)
+
 #define RWLOCK_RDUNLOCK(rwlock) \
-  mc_rwlock_rdunlock(rwlock)
-#define RWLOCK_WRLOCK(rwlock) \
+  mc_rwlock_rdunlock(rwlock)    
+
+#define RWLOCK_WRLOCK(rwlock)   \
   mc_rwlock_wrlock(rwlock)
+
 #define RWLOCK_WRUNLOCK(rwlock) \
   mc_rwlock_wrunlock(rwlock)
 
@@ -471,13 +545,17 @@ SetEvent( *cond )
 /* ***************** *
  * SYSTEM QUEUE SYNC *
  * ***************** */
+
 #define SLEEP_QUEUE( queue )                                    \
   ResetEvent( *(queue->touched_signal) );                        \
-WaitForSingleObject( *(queue->touched_signal), INFINITE )
+  WaitForSingleObject( *(queue->touched_signal), INFINITE )
+
 #define WAKE_QUEUE(queue, action)               \
   action;                             \
   SetEvent( *(queue->cond))
+
 #define SLEEP_RESET( queue ) 
+
 
 #endif /* End unix/windows macros */
 
@@ -488,10 +566,10 @@ WaitForSingleObject( *(queue->touched_signal), INFINITE )
  * * * * * * * * * * * * * * */
 /* Check to see if a data structure is NULL: Perform 'action' if it is null */
 #define CHECK_NULL( var, action )                                  \
-  if ( var == NULL ) {                                        \
-    fprintf(stderr, "Pointer var is null: expected otherwise.\n");    \
-    fprintf(stderr, "Error occured at %s:%d", __FILE__, __LINE__);    \
-    action; \
+  if ( var == NULL ) {                                             \
+    fprintf(stderr, "Pointer var is null: expected otherwise.\n"); \
+    fprintf(stderr, "Error occured at %s:%d", __FILE__, __LINE__); \
+    action;                                                        \
   }
 
 #define Return_and_Report_MErr__when_CHECK_NULL( var, one_agency ) \
@@ -628,7 +706,7 @@ WaitForSingleObject( *(queue->touched_signal), INFINITE )
         type, __FILE__, __LINE__ );             \
   }
 
-#ifndef _WIN32
+
 #define CH_DATATYPE_STR_TO_VAL(type, string, val) \
   switch (type) { \
     case CH_INTTYPE: \
@@ -644,33 +722,11 @@ WaitForSingleObject( *(queue->touched_signal), INFINITE )
                         *(unsigned short*)val = (unsigned short)atoi(string); /*FIXME*/ \
     break; \
     case CH_FLOATTYPE: \
-                       *(float*)val = strtof(string, NULL); \
-    break; \
-    case CH_DOUBLETYPE: \
-                        *(double*)val = strtod(string, NULL); \
-    break; \
-    default: \
-             fprintf(stderr, \
-                 "Unsupported data type: %d %s:%d\n", \
-                 type, __FILE__, __LINE__ ); \
-  }
-#else
-#define CH_DATATYPE_STR_TO_VAL(type, string, val) \
-  switch (type) { \
-    case CH_INTTYPE: \
-                     *(int*)val = atoi(string); \
-    break; \
-    case CH_UINTTYPE: \
-                      *(unsigned int*)val = atoi(string); \
-    break; \
-    case CH_SHORTTYPE: \
-                       *(short*)val = (short)atoi(string); /*FIXME*/ \
-    break; \
-    case CH_USHORTTYPE: \
-                        *(unsigned short*)val = (unsigned short)atoi(string); /*FIXME*/ \
-    break; \
-    case CH_FLOATTYPE: \
+#ifdef _WIN32
                        *(float*)val = (double)strtod(string, NULL); \
+#else
+                       *(float*)val = strtof(string, NULL); \
+#endif
     break; \
     case CH_DOUBLETYPE: \
                         *(double*)val = strtod(string, NULL); \
@@ -680,7 +736,7 @@ WaitForSingleObject( *(queue->touched_signal), INFINITE )
                  "Unsupported data type: %d %s:%d\n", \
                  type, __FILE__, __LINE__ ); \
   }
-#endif
+
 
 
 #endif
