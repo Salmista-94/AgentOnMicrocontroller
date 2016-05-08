@@ -674,12 +674,12 @@ int fipa_word_Parse(fipa_word_t** word, fipa_message_string_p message)
     i++;
   }
   *word = (fipa_word_t*)malloc(sizeof(fipa_word_t));
-  CHECK_NULL(*word, exit(0););
+  Exit__when_CHECK_NULL(*word);
   (*word)->content = (char*)malloc
     (
      sizeof(char) * (i+1)
     );
-  CHECK_NULL((*word)->content, exit(0););
+  Exit__when_CHECK_NULL((*word)->content);
 
   /* Copy word */
   i = 0;
@@ -1087,7 +1087,7 @@ int fipa_agent_identifier_Parse(fipa_agent_identifier_p* aid, fipa_message_strin
      sizeof(char) * 
      (strlen(word->content)+1)
     );
-  CHECK_NULL((*aid)->name, exit(0););
+  Exit__when_CHECK_NULL((*aid)->name);
   strcpy((*aid)->name, word->content);
   /* No need to keep the word around... */
   fipa_word_Destroy(word);

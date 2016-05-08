@@ -54,18 +54,18 @@ asm_node_Initialize(message_p message, mc_asm_p security_manager)
   havege_state hs;
   havege_init(&hs);
   buf = (unsigned char*)malloc(sizeof(char) * 1024);
-  CHECK_NULL(buf, exit(0););
+  Exit__when_CHECK_NULL(buf, 0);
   asm_node = (asm_node_p)malloc(sizeof(asm_node_t));
-  CHECK_NULL(asm_node, exit(0););
+  Exit__when_CHECK_NULL(asm_node, 0);
   memset(asm_node, 0, sizeof(asm_node_t));
   asm_node->data.dh_data = (dh_data_p)malloc(sizeof(dh_data_t));
-  CHECK_NULL(asm_node->data.dh_data, exit(0););
+  Exit__when_CHECK_NULL(asm_node->data.dh_data, 0);
   memset(asm_node->data.dh_data, 0, sizeof(dh_data_t));
   asm_node->remote_addr = (struct sockaddr_in*)malloc
     (
      sizeof(struct sockaddr_in)
     );
-  CHECK_NULL(asm_node->remote_addr, exit(0););
+  Exit__when_CHECK_NULL(asm_node->remote_addr, 0);
   hostname = strtok_r
     (
      message->from_address,

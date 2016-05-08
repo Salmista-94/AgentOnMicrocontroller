@@ -174,7 +174,7 @@ message_xml_compose__p(mc_asm_p security_manager)
     (
      sizeof(char) * p_len
     );
-  CHECK_NULL(string, exit(0););
+  Exit__when_CHECK_NULL(string, 0);
   if
     (
      mpi_write_string
@@ -226,7 +226,7 @@ message_xml_compose__g(mc_asm_p security_manager)
     (
      sizeof(char) * p_len
     );
-  CHECK_NULL(string, exit(0););
+  Exit__when_CHECK_NULL(string, 0);
   if
     (
      mpi_write_string
@@ -278,7 +278,7 @@ message_xml_compose__y(mc_asm_p security_manager)
     (
      sizeof(char) * p_len
     );
-  CHECK_NULL(string, exit(0););
+  Exit__when_CHECK_NULL(string, 0);
   if
     (
      mpi_write_string

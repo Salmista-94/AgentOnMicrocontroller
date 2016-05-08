@@ -61,15 +61,15 @@ ams_Initialize(mc_platform_p mc_platform)
 {
   ams_p ams;
   ams = (ams_p)malloc(sizeof(ams_t));
-  CHECK_NULL(ams, exit(0););
+  Exit__when_CHECK_NULL(ams, 0);
   ams->mc_platform = mc_platform;
 
   ams->runflag_lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  CHECK_NULL(ams->runflag_lock, exit(0););
+  Exit__when_CHECK_NULL(ams->runflag_lock, 0);
   MUTEX_INIT(ams->runflag_lock);
 
   ams->runflag_cond = (COND_T*)malloc(sizeof(COND_T));
-  CHECK_NULL(ams->runflag_cond, exit(0););
+  Exit__when_CHECK_NULL(ams->runflag_cond, 0);
   COND_INIT(ams->runflag_cond);
 
   ams->run = 0;

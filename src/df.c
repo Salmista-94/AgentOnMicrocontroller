@@ -342,11 +342,11 @@ df_request_search_New(void)
 {
   df_request_search_p search;
   search = (df_request_search_p)malloc(sizeof(df_request_search_t));
-  CHECK_NULL(search, return NULL;);
+  Return_arg__when_CHECK_NULL(search, NULL);
   search->lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  CHECK_NULL(search->lock, return NULL;);
+  Return_arg__when_CHECK_NULL(search->lock, NULL);
   search->cond = (COND_T*)malloc(sizeof(COND_T));
-  CHECK_NULL(search->cond, return NULL;);
+  Return_arg__when_CHECK_NULL(search->cond, NULL);
   MUTEX_INIT(search->lock);
   COND_INIT(search->cond);
   return search;

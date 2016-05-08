@@ -92,7 +92,7 @@ mtp_http_New(void)
 {
   mtp_http_p http;
   http = (mtp_http_p)malloc(sizeof(mtp_http_t));
-  CHECK_NULL(http, exit(0););
+  Exit__when_CHECK_NULL(http, 0);
   memset(http, 0, sizeof(mtp_http_t));
   http->content = NULL;
   return http;
@@ -198,7 +198,7 @@ mtp_http_InitializeFromConnection
   mtp_http_t* http_header;
 
   buffer = (char*) malloc(sizeof(char) * (SOCKET_INPUT_SIZE + 1));
-  CHECK_NULL(buffer, exit(0););
+  Exit__when_CHECK_NULL(buffer, 0);
   message_string = dynstring_New();
   memset(buffer, '\0', (sizeof(char) * (SOCKET_INPUT_SIZE + 1)) );
 
@@ -441,7 +441,7 @@ int http_ParseExpression(
     (
      sizeof(char) * (i+1)
     );
-  CHECK_NULL(*name, exit(0););
+  Exit__when_CHECK_NULL(*name, 0);
   charptr = expression_string;
   i=0;
   while(charptr != tmp) {
@@ -464,7 +464,7 @@ int http_ParseExpression(
      sizeof(char) * 
      (strlen(tmp) + 1)
     );
-  CHECK_NULL(*value, exit(0););
+  Exit__when_CHECK_NULL(*value, 0);
   strcpy(*value, tmp);
   return MC_SUCCESS;
 }

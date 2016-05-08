@@ -66,7 +66,7 @@ mc_platform_Initialize(MCAgency_t agency, ChOptions_t* ch_options)
   
   /* Allocate Memory */
   mc_platform = (mc_platform_p)malloc(sizeof(mc_platform_t));
-  CHECK_NULL(mc_platform, agency->last_error = MC_ERR_MEMORY; return NULL);
+  Return_and_Report_MErr__when_CHECK_NULL(mc_platform, agency);
 
   /* Initialize members */
   mc_platform->err = 0;
@@ -99,7 +99,7 @@ mc_platform_Initialize(MCAgency_t agency, ChOptions_t* ch_options)
   localhost = gethostbyname(hostname); /* FIXME */
 
   mc_platform->hostname = (char*)malloc(sizeof(char)*DEFAULT_HOSTNAME_LENGTH);
-  CHECK_NULL(mc_platform->hostname, agency->last_error = MC_ERR_MEMORY;return NULL);
+  Return_and_Report_MErr__when_CHECK_NULL(mc_platform->hostname, agency);
 
   if(localhost == NULL) 
     strcpy(mc_platform->hostname, "127.0.0.1"); 
@@ -110,7 +110,7 @@ mc_platform_Initialize(MCAgency_t agency, ChOptions_t* ch_options)
     strcpy(mc_platform->hostname, inet_ntoa( *(struct in_addr*)localhost->h_addr) ); 
   
   mc_platform->hostname = (char*)realloc( mc_platform->hostname, sizeof(char) * (strlen(mc_platform->hostname)+1));
-  CHECK_NULL(mc_platform->hostname, agency->last_error = MC_ERR_MEMORY;return NULL);
+  Return_and_Report_MErr__when_CHECK_NULL(mc_platform->hostname, agency);
   mc_platform->port = agency->portno;
   mc_platform->interp_options = ch_options;
 
@@ -165,18 +165,12 @@ mc_platform_Initialize(MCAgency_t agency, ChOptions_t* ch_options)
   mc_platform->MC_steer_cond  = (COND_T*)malloc(sizeof(COND_T));
 
   /* Check memory */
-  CHECK_NULL( mc_platform->MC_signal_cond,
-      agency->last_error = MC_ERR_MEMORY;return NULL );
-  CHECK_NULL( mc_platform->MC_sync_cond  ,
-      agency->last_error = MC_ERR_MEMORY;return NULL );
-  CHECK_NULL( mc_platform->MC_signal_lock,
-      agency->last_error = MC_ERR_MEMORY;return NULL );
-  CHECK_NULL( mc_platform->MC_sync_lock  ,
-      agency->last_error = MC_ERR_MEMORY;return NULL );
-  CHECK_NULL( mc_platform->MC_steer_lock ,
-      agency->last_error = MC_ERR_MEMORY;return NULL );
-  CHECK_NULL( mc_platform->MC_steer_cond ,
-      agency->last_error = MC_ERR_MEMORY;return NULL );
+  Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_signal_cond, agency);
+  Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_sync_cond,   agency);
+  Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_signal_lock, agency);
+  Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_sync_lock,   agency);
+  Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_steer_lock,  agency);
+  Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_steer_cond,  agency);
 
   /* Init sync variables */
   COND_INIT ( mc_platform->MC_signal_cond );
@@ -198,11 +192,9 @@ mc_platform_Initialize(MCAgency_t agency, ChOptions_t* ch_options)
   /* Allocate and init giant lock */
   mc_platform->giant = 1;
   mc_platform->giant_lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  CHECK_NULL(mc_platform->giant_lock,
-      agency->last_error = MC_ERR_MEMORY;return NULL );
+  Return_and_Report_MErr__when_CHECK_NULL(mc_platform->giant_lock, agency);
   mc_platform->giant_cond = (COND_T*)malloc(sizeof(COND_T));
-  CHECK_NULL(mc_platform->giant_cond,
-      agency->last_error = MC_ERR_MEMORY;return NULL );
+  Return_and_Report_MErr__when_CHECK_NULL(mc_platform->giant_cond, agency);
 
   MUTEX_INIT( mc_platform->giant_lock );
   COND_INIT ( mc_platform->giant_cond );

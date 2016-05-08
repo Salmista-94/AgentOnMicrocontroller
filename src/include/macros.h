@@ -494,6 +494,17 @@ WaitForSingleObject( *(queue->touched_signal), INFINITE )
     action; \
   }
 
+#define Return_and_Report_MErr__when_CHECK_NULL( var, one_agency ) \
+  CHECK_NULL( var, one_agency->last_error = MC_ERR_MEMORY;return NULL )    
+
+#define Return_arg__when_CHECK_NULL( var, arg )  \
+  CHECK_NULL( var, return arg )    
+
+#define Exit__when_CHECK_NULL( var, i ) \
+  CHECK_NULL( var, exit(i) )    
+
+
+
 #define WARN( message ) \
   fprintf(stderr, "\nWARNING: "); \
   fprintf(stderr, message ); \

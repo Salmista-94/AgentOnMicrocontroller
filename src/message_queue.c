@@ -67,7 +67,7 @@ void message_queue_SendOutgoing(
        sizeof(char) * 
        (strlen(mc_platform->hostname)+10)
       );
-    CHECK_NULL(local_address, exit(0));
+    Exit__when_CHECK_NULL(local_address, 0);
     sprintf
       (
        local_address,
