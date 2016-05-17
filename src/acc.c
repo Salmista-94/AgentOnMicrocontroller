@@ -95,8 +95,11 @@ acc_Initialize(struct mc_platform_s* mc_platform)
 
   acc->waiting = 0;
   new_Mutex(&(acc->waiting_lock));
+  //
   acc->waiting_cond = (COND_T*)malloc(sizeof(COND_T));
   COND_INIT(acc->waiting_cond);
+  //
+  //new_COND(&(acc->waiting_cond));
 
 	/* Initialize conn_thread stuff */
 	MUTEX_INIT(&acc->conn_thread_lock);

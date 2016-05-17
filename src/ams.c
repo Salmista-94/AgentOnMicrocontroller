@@ -72,6 +72,10 @@ ams_Initialize(mc_platform_p mc_platform)
   Exit__when_CHECK_NULL(ams->runflag_cond, 0);
   COND_INIT(ams->runflag_cond);
 
+//#_-
+  // COND_NEW_or_Exit(&(ams->runflag_cond), 0);
+//
+
   ams->run = 0;
 
   ams->waiting = 0;

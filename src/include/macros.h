@@ -438,9 +438,17 @@ typedef name##_t* name##_p;
 
 /* New */
 #define COND_NEW(cond_p)                    \
-  *cond_p = (HANDLE*)malloc(sizeof(HANDLE)); \
+  *cond_p = (COND_T*)malloc(sizeof(COND_T)); \
   if(*cond_p == NULL)                        \
     fprintf(stderr, "Memory Error. %s:%d\n", __FILE__, __LINE__)
+
+
+#define COND_NEW_or_Exit(cond_p, arg)        \
+  *cond_p = (COND_T*)malloc(sizeof(COND_T)); \
+  Exit__when_CHECK_NULL(*cond_p,arg);        \
+  COND_INIT(*cond_p);                        \
+
+
 
 /* Init */
 #define COND_INIT(cond)                        \
