@@ -408,6 +408,7 @@ typedef name##_t* name##_p;
 /* Destroy */
 #define MUTEX_DESTROY(mutex)
 
+
 /* Functions */
 
 #define MUTEX_LOCK(mutex) \
