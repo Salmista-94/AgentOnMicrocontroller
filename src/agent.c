@@ -39,7 +39,7 @@
 #include "winconfig.h"
 #endif
 
-#include <embedch.h>
+//#include <embedch.h>
 
 #include "include/libmc.h"
 #include "include/agent.h"
@@ -50,6 +50,23 @@
 #include "include/interpreter_variable_data.h"
 #include "include/xml_parser.h"
 #include "include/fipa_acl.h"
+
+
+#define MAX_AGENTS                    10
+struct agent_s _ListAGENTS[MAX_AGENTS];
+unsigned short int countCreatedAgents= 0;
+
+
+agent_p getNewAgent(){
+    if (countCreatedAgents == MAX_AGENTS){
+        fprintf(stderr, "MAX_AGENTS: array bound excedent!");
+        return NULL;
+    }
+    countCreatedAgents++;
+    return &_ListAGENTS[countCreatedAgents-1]
+}
+
+
 
 int agent_AddPersistentVariable(agent_p agent, int task_num, const char* var_name)
 {
@@ -195,8 +212,8 @@ agent_Copy(const agent_p agent)
   new_Mutex(&(cp_agent->agent_status_lock));
   new_COND(&(cp_agent->agent_status_cond));
 
-	/* Mailbox */
-	cp_agent->mailbox = ListInitialize();
+  /* Mailbox */
+  cp_agent->mailbox = ListInitialize();
 
   cp_agent->agent_share_data_queue = ListCopy(
       agent->agent_share_data_queue, 
@@ -206,21 +223,35 @@ agent_Copy(const agent_p agent)
 }
 
 agent_p
-agent_New(void)
+//agent_New(MCAgent_t agent_pointer= NULL) # No lo implementaré con argumento!!
+agent_New(void) // aprarentemente RESUELTO
 {
-  agent_p agent;
-  agent = (agent_p)malloc(sizeof(agent_t));
-  if(agent==NULL) {
-    fprintf(stderr, "Memory error at %s:%d\n",
-        __FILE__, __LINE__);
-    return NULL;
-  }
-  agent_Init(agent);
-  return agent;
+    agent_p agent;
+#ifndef MICRO_CORTEX_M
+
+    agent = (agent_p)malloc(sizeof(agent_t));
+
+    if(agent==NULL) {
+        fprintf(stderr, "Memory error at %s:%d\n",
+            __FILE__, __LINE__);
+        return NULL;
+    }
+    agent_Init(agent);
+    return agent;
+
+#else
+    agent_p = getNewAgent();
+
+    if(agent==NULL) return NULL;
+    
+    agent_Init(agent_p);
+    return agent_p;
+#endif
 }
 
 int agent_Init(agent_p agent)
 {
+#ifndef MICRO_CORTEX_M
   /* Just init everything to zero */
   memset(agent, 0, sizeof(agent_t));
 
@@ -235,6 +266,23 @@ int agent_Init(agent_p agent)
   agent->mailbox = ListInitialize();
 
   agent->agent_share_data_queue = ListInitialize();
+  
+#else
+  agent_name.agent_share_data_queue = NULL;
+  agent_name.binary = 0;
+
+  MUTEX_INIT(&(agent->run_lock));
+
+  MUTEX_INIT(&(agent->lock));
+
+  MUTEX_INIT(&(agent->agent_status_lock));
+  COND_INIT(&(agent->agent_status_cond));
+
+  agent->mailbox = NULL;
+
+  agent->agent_share_data_queue = NULL;
+#endif
+
   return 0;
 }
 
@@ -244,7 +292,7 @@ agent_NewBinary( struct mc_platform_s *mc_platform)
   agent_p agent; 
 
   /* malloc memory for the agent */
-  agent = (MCAgent_t)malloc(sizeof(agent_t));
+  agent = getNewAgent();
   memset(agent, 0, sizeof(agent_t));
 
   /* Set up general agent data access mutex */
@@ -274,7 +322,7 @@ agent_NewBinary( struct mc_platform_s *mc_platform)
   agent->agent_pipe_ready_to_read = 0;
   agent->agent_ready_to_send = 0;
   agent->agent_pipe_active = 0;
-	agent->binary = 1;
+  agent->binary = 1;
 
   /* set the agent thread to null until activated */
   agent->agent_thread_id = 0;
@@ -303,13 +351,13 @@ agent_NewBinary( struct mc_platform_s *mc_platform)
 
   agent->mc_platform = mc_platform;
 
-	agent->agent_address = (char*)malloc(sizeof(char) * 
-			(strlen(agent->mc_platform->hostname) + 12 + 10)
-		);
-	if (agent->agent_address == NULL) {
-		fprintf(stderr, "Memory error. %s:%d\n", __FILE__, __LINE__);
-		exit(-1);
-	}
+  agent->agent_address = (char*)malloc(sizeof(char) * 
+      (strlen(agent->mc_platform->hostname) + 12 + 10)
+    );
+  if (agent->agent_address == NULL) {
+    fprintf(stderr, "Memory error. %s:%d\n", __FILE__, __LINE__);
+    exit(-1);
+  }
   sprintf(agent->agent_address,
       "http://%s:%d/acc",
       agent->mc_platform->hostname,
@@ -328,7 +376,7 @@ agent_Initialize(
   int err_code;
 
   /* malloc memory for the agent */
-  agent = (MCAgent_t)malloc(sizeof(agent_t));
+  agent = getNewAgent();
   memset(agent, 0, sizeof(agent_t));
 
   /* Set up general agent data access mutex */
@@ -438,13 +486,13 @@ agent_Initialize(
 
   agent->mc_platform = mc_platform;
 
-	agent->agent_address = (char*)malloc(sizeof(char) * 
-			(strlen(agent->mc_platform->hostname) + 12 + 10)
-		);
-	if (agent->agent_address == NULL) {
-		fprintf(stderr, "Memory error. %s:%d\n", __FILE__, __LINE__);
-		exit(-1);
-	}
+  agent->agent_address = (char*)malloc(sizeof(char) * 
+      (strlen(agent->mc_platform->hostname) + 12 + 10)
+    );
+  if (agent->agent_address == NULL) {
+    fprintf(stderr, "Memory error. %s:%d\n", __FILE__, __LINE__);
+    exit(-1);
+  }
   sprintf(agent->agent_address,
       "http://%s:%d/acc",
       agent->mc_platform->hostname,
@@ -473,9 +521,9 @@ agent_Destroy(agent_p agent)
   if (agent->sender != NULL) {
     free(agent->sender);
   }
-	if (agent->wg_code != NULL) {
-		free(agent->wg_code);
-	}
+  if (agent->wg_code != NULL) {
+    free(agent->wg_code);
+  }
   if (agent->agent_address != NULL) {
     free(agent->agent_address);
   }
@@ -486,7 +534,7 @@ agent_Destroy(agent_p agent)
     if ((agent->agent_interp) != NULL) {
       Ch_Reset(*agent->agent_interp);
       ListWRLock(agent->mc_platform->interpreter_queue);
-			ListAdd(agent->mc_platform->interpreter_queue, agent->agent_interp);
+      ListAdd(agent->mc_platform->interpreter_queue, agent->agent_interp);
       ListWRUnlock(agent->mc_platform->interpreter_queue);
     }
   } else {
@@ -539,9 +587,9 @@ agent_RunChScript(agent_p agent, mc_platform_p mc_platform)
 #else
   int stack_size;
   if (mc_platform->stack_size[MC_THREAD_AGENT] < 1) {
-	  stack_size = mc_platform->stack_size[MC_THREAD_AGENT]+1;
+    stack_size = mc_platform->stack_size[MC_THREAD_AGENT]+1;
   } else {
-	  stack_size = mc_platform->stack_size[MC_THREAD_AGENT];
+    stack_size = mc_platform->stack_size[MC_THREAD_AGENT];
   }
 #endif
   MUTEX_LOCK(agent->agent_status_lock);
@@ -1118,7 +1166,7 @@ agent_RunChScriptThread(void* ChAgent)
 
   /* Get an interpreter from the list of agency interpreters */
   agent->agent_interp = (ChInterp_t *)interpreter_queue_CreateRetrieve(mc_platform->interpreter_queue,
-		agent->mc_platform->interp_options );
+    agent->mc_platform->interp_options );
   if(agent->agent_interp == NULL) {
     /* Could not get a new interpreter. Abort. */
     WARN("Could not initialize another Ch interperter. Please make more copies of the chmt*.dl file.\n");
@@ -1148,8 +1196,8 @@ agent_RunChScriptThread(void* ChAgent)
   Ch_SetVar(*agent->agent_interp, "mc_num_tasks",   
       CH_INTTYPE, (int)agent->datastate->number_of_tasks);
 
-	Ch_SetVar(*agent->agent_interp, "mc_agent_address",
-			CH_CHARPTRTYPE, agent->agent_address);
+  Ch_SetVar(*agent->agent_interp, "mc_agent_address",
+      CH_CHARPTRTYPE, agent->agent_address);
 
   /* Originally, we hope to use append runscript if the buffer for code is less 
      than 51 bytes. Otherwise we must open a file and save the data to the 
@@ -1280,10 +1328,10 @@ agent_RunChScriptThread(void* ChAgent)
       (ListElemDestroyFunc_t) interpreter_variable_data_Destroy);
 
   for(i = 0; i < agent->datastate->tasks[progress]->num_saved_variables; i++) {
-	/*agent_variable_list_Remove(
+  /*agent_variable_list_Remove(
         agent->datastate->tasks[progress]->agent_variable_list,
-	agent->datastate->tasks[progress]->saved_variables[i]
-	); */ /* FIXME: Why doesn't this work? */
+  agent->datastate->tasks[progress]->saved_variables[i]
+  ); */ /* FIXME: Why doesn't this work? */
     ListWRLock(agent->datastate->tasks[progress]->agent_variable_list);
     ListAdd(
         agent->datastate->tasks[progress]->agent_variable_list,

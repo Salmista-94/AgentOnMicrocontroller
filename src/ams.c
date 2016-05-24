@@ -41,8 +41,24 @@
 #include "include/agent.h"
 #include "include/mc_platform.h"
 
-  int
-ams_Destroy(ams_p ams)
+
+#define MAX_AMSs                 120
+struct message_t _ListAMS[MAX_AMSs];
+unsigned short int count_AMSs= 0;
+
+
+ams_p getNewAMS(){
+    if (count_AMSs == MAX_AMSs){
+        fprintf(stderr, "MAX_AMSs: array bound excedent!");
+        return NULL;
+    }
+    count_AMSs++;
+    return &_ListAMS[count_AMSs-1]
+}
+
+
+
+int ams_Destroy(ams_p ams)
 {
   MUTEX_DESTROY(ams->runflag_lock);
   free(ams->runflag_lock);
@@ -60,15 +76,15 @@ ams_Destroy(ams_p ams)
 ams_Initialize(mc_platform_p mc_platform)
 {
   ams_p ams;
-  ams = (ams_p)malloc(sizeof(ams_t));
+  ams = getNewAMS();
   Exit__when_CHECK_NULL(ams, 0);
   ams->mc_platform = mc_platform;
 
-  ams->runflag_lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
+  ams->runflag_lock = getNewMutex();
   Exit__when_CHECK_NULL(ams->runflag_lock, 0);
   MUTEX_INIT(ams->runflag_lock);
 
-  ams->runflag_cond = (COND_T*)malloc(sizeof(COND_T));
+  ams->runflag_cond = getNewMutexCond();
   Exit__when_CHECK_NULL(ams->runflag_cond, 0);
   COND_INIT(ams->runflag_cond);
 
@@ -80,7 +96,7 @@ ams_Initialize(mc_platform_p mc_platform)
 
   ams->waiting = 0;
   new_Mutex(&(ams->waiting_lock));
-  ams->waiting_cond = (COND_T*)malloc(sizeof(COND_T));
+  ams->waiting_cond = getNewMutexCond();
   COND_INIT(ams->waiting_cond);
 
   return ams;
@@ -107,123 +123,110 @@ ams_Print(ams_p ams)
   return;
 }
 
-  extern int 
-ams_ManageAgentList(ams_p ams)
+extern int ams_ManageAgentList(ams_p ams)
 {
-  /*variables */
-  MCAgent_t current_agent;
-  int index = 0;
-  list_t* alist;
-  mc_platform_p global;
-  message_p message;
+    /*variables */
+    MCAgent_t current_agent;
+    int index = 0;
+    list_t* alist;
+    mc_platform_p global;
+    message_p message;
+    
+    alist = ams->mc_platform->agent_queue;
+    global = ams->mc_platform;
+    
+    /* looks through the agent list and performs action on agent 
+       depending upon the status that the agent displays */
+    ListWRLock(alist);
+    for(index=0; index < alist->size; index++){
+        if( current_agent = (MCAgent_t)ListSearch(alist, index) ){
+            if(current_agent->binary)
+                continue; /* Do not deal with binary agents */
 
-  alist = ams->mc_platform->agent_queue;
-  global = ams->mc_platform;
+            MUTEX_LOCK(current_agent->lock);
+            current_agent->orphan = 0;
+            MUTEX_LOCK(global->quit_lock);
+            MUTEX_LOCK(current_agent->agent_status_lock);
+            if(global->quit && current_agent->agent_status != MC_WAIT_MESSGSEND) {
+                MUTEX_UNLOCK(current_agent->agent_status_lock);
+                MUTEX_UNLOCK(global->quit_lock);
+                MUTEX_UNLOCK(current_agent->lock);
+                MC_TerminateAgent(current_agent);
+                /* If we can lock the agent's run lock, then it must not be running. */
+                MUTEX_LOCK(current_agent->run_lock);
+                MUTEX_UNLOCK(current_agent->run_lock);
+                continue;
+            }else
+                MUTEX_UNLOCK(current_agent->agent_status_lock);
+            
+            MUTEX_UNLOCK(global->quit_lock);
+            MUTEX_LOCK(current_agent->agent_status_lock);
+            switch(current_agent->agent_status){
+                case MC_WAIT_CH :
+                    MUTEX_UNLOCK(current_agent->lock);
+                    MUTEX_UNLOCK(current_agent->agent_status_lock);
+                    agent_RunChScript(current_agent, global); //<----------------------------------------
+                    break;
+                case MC_AGENT_ACTIVE :
+                    MUTEX_UNLOCK(current_agent->lock);
+                    MUTEX_UNLOCK(current_agent->agent_status_lock);
+                    /* nothing is done if the agent in question is ACTIVE */
+                    break;
+                case MC_WAIT_MESSGSEND :
+                    current_agent->agent_status = MC_WAIT_FINISHED;
+                    COND_BROADCAST(current_agent->agent_status_cond);
+                    MUTEX_UNLOCK(current_agent->agent_status_lock);
+                    MUTEX_LOCK(ams->runflag_lock);
+                    ams->run = 1;
+                    MUTEX_UNLOCK(ams->runflag_lock);
+                    MUTEX_UNLOCK(current_agent->lock);
+                    message = message_New();
+                    if (message_InitializeFromAgent(ams->mc_platform, message, current_agent)){
+                        fprintf(stderr, "Error initializing message from agent. %s:%d\n", __FILE__, __LINE__);
+                        message_Destroy(message);
+                        message = NULL;
+                    } else {
+                        /* Rename the agent: This is done so that if the agent is coming back here
+                         * very quickly, the names will not conflict. */
+                        current_agent->name = (char*)realloc(
+                            current_agent->name,
+                            sizeof(char) * (strlen(current_agent->name) + 10)
+                            );
+                        strcat(current_agent->name, "_SENDING");
 
-  /* looks through the agent list and performs action on agent 
-     depending upon the status that the agent displays */
-  ListWRLock(alist);
-  for(index=0; index<alist->size; index++)
-  {
-    if((current_agent = (MCAgent_t)ListSearch(alist, index)))
-    {
-			if(current_agent->binary) {continue;} /* Do not deal with binary agents */
-      MUTEX_LOCK(current_agent->lock);
-      current_agent->orphan = 0;
-      MUTEX_LOCK(global->quit_lock);
-      MUTEX_LOCK(current_agent->agent_status_lock);
-      if(global->quit && current_agent->agent_status != MC_WAIT_MESSGSEND) {
-        MUTEX_UNLOCK(current_agent->agent_status_lock);
-        MUTEX_UNLOCK(global->quit_lock);
-        MUTEX_UNLOCK(current_agent->lock);
-        MC_TerminateAgent(current_agent);
-        /* If we can lock the agent's run lock, then it must not be running. */
-        MUTEX_LOCK(current_agent->run_lock);
-        MUTEX_UNLOCK(current_agent->run_lock);
-        continue;
-      } else {
-        MUTEX_UNLOCK(current_agent->agent_status_lock);
-      }
-      MUTEX_UNLOCK(global->quit_lock);
-      MUTEX_LOCK(current_agent->agent_status_lock);
-      switch(current_agent->agent_status)
-      {
-        case MC_WAIT_CH :
-          MUTEX_UNLOCK(current_agent->lock);
-          MUTEX_UNLOCK(current_agent->agent_status_lock);
-          agent_RunChScript(current_agent, global);
-          break;
-        case MC_AGENT_ACTIVE :
-          MUTEX_UNLOCK(current_agent->lock);
-          MUTEX_UNLOCK(current_agent->agent_status_lock);
-          /* nothing is done if the agent in question is ACTIVE */
-          break;
-        case MC_WAIT_MESSGSEND :
-          current_agent->agent_status = MC_WAIT_FINISHED;
-          COND_BROADCAST(current_agent->agent_status_cond);
-          MUTEX_UNLOCK(current_agent->agent_status_lock);
-          MUTEX_LOCK(ams->runflag_lock);
-          ams->run = 1;
-          MUTEX_UNLOCK(ams->runflag_lock);
-          MUTEX_UNLOCK(current_agent->lock);
-          message = message_New();
-          if (
-              message_InitializeFromAgent
-              (
-               ams->mc_platform,
-               message,
-               current_agent
-              )
-             )
-          {
-	    fprintf(stderr, "Error initializing message from agent. %s:%d\n", __FILE__, __LINE__);
-            message_Destroy(message);
-            message = NULL;
-          } else {
-            /* Rename the agent: This is done so that if the agent is coming back here
-             * very quickly, the names will not conflict. */
-            current_agent->name = (char*)realloc(
-                current_agent->name,
-                sizeof(char) * (strlen(current_agent->name) + 10)
-                );
-            strcat(current_agent->name, "_SENDING");
-            ListWRLock(ams->mc_platform->message_queue);
-            ListAdd(
-                ams->mc_platform->message_queue,
-                message
-                );
-            ListWRUnlock(ams->mc_platform->message_queue);
-          }
-          break;
-        case MC_AGENT_NEUTRAL :
-          MUTEX_UNLOCK(current_agent->agent_status_lock);
-          MUTEX_UNLOCK(current_agent->lock);
-          break;
-        case MC_WAIT_FINISHED :
-          MUTEX_UNLOCK(current_agent->agent_status_lock);
-          MUTEX_UNLOCK(current_agent->lock);
-          ListDelete(alist, index);
-          /* Free the agent memory */
-          agent_Destroy(current_agent);
-          // Change index = 0 to index-- to fix the problem where agents 
-          // remain in an agency when they should be removed from the agency.
-          // Yu-Cheng Chou July 28, 2009
-          index--;
-          break;
-        default : 
-          printf("ERROR IN AGENT FORMAT"); 
-          printf("Agent Format %d not recognized.",
-                 current_agent->agent_status);
-          /* Flush the invalid agent. */
-          current_agent->agent_status = MC_WAIT_FINISHED;
-          COND_BROADCAST(current_agent->agent_status_cond);
-          MUTEX_UNLOCK(current_agent->agent_status_lock);
-          MUTEX_UNLOCK(current_agent->lock);
-      }
-    } 
-  }
-  ListWRUnlock(alist);
-  return 0 ;
+                        ListWRLock(ams->mc_platform->message_queue);
+                        ListAdd(ams->mc_platform->message_queue, message);
+                        ListWRUnlock(ams->mc_platform->message_queue);
+                    }
+                    break;
+                case MC_AGENT_NEUTRAL :
+                    MUTEX_UNLOCK(current_agent->agent_status_lock);
+                    MUTEX_UNLOCK(current_agent->lock);
+                    break;
+                case MC_WAIT_FINISHED :
+                    MUTEX_UNLOCK(current_agent->agent_status_lock);
+                    MUTEX_UNLOCK(current_agent->lock);
+                    ListDelete(alist, index);
+                    /* Free the agent memory */
+                    agent_Destroy(current_agent);
+                    // Change index = 0 to index-- to fix the problem where agents 
+                    // remain in an agency when they should be removed from the agency.
+                    // Yu-Cheng Chou July 28, 2009
+                    index--;
+                    break;
+                default : 
+                    printf("ERROR IN AGENT FORMAT"); 
+                    printf("Agent Format %d not recognized.", current_agent->agent_status);
+                    /* Flush the invalid agent. */
+                    current_agent->agent_status = MC_WAIT_FINISHED;
+                    COND_BROADCAST(current_agent->agent_status_cond);
+                    MUTEX_UNLOCK(current_agent->agent_status_lock);
+                    MUTEX_UNLOCK(current_agent->lock);
+            }
+        }
+    }
+    ListWRUnlock(alist);
+    return 0 ;
 }
 
   void

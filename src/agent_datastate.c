@@ -43,8 +43,23 @@
 #include "include/macros.h"
 #include "include/mc_error.h"
 
-agent_datastate_p
-agent_datastate_Copy(const agent_datastate_p datastate)
+#define MAX_AGENT_DATASTATE                 40
+struct agent_datastate_t _ListDATASTATES[MAX_AGENT_DATASTATE];
+unsigned short int count_agent_datastate= 0;
+
+
+agent_datastate_p getNewAgentDataState(){
+    if (count_agent_datastate == MAX_AGENT_DATASTATE){
+        fprintf(stderr, "MAX_AGENT_DATASTATE: array bound excedent!");
+        return NULL;
+    }
+    count_agent_datastate++;
+    return &_ListDATASTATES[count_agent_datastate-1]
+}
+
+
+
+agent_datastate_p agent_datastate_Copy(const agent_datastate_p datastate)
 {
   char** code_id_itr;
   char** code_itr;
@@ -112,24 +127,31 @@ agent_datastate_Copy(const agent_datastate_p datastate)
 }
   
 agent_datastate_p
-agent_datastate_New( void )
+agent_datastate_New( void ) // aprarentemente RESUELTO
 {
-  agent_datastate_p agent_datastate;
-  agent_datastate = (agent_datastate_p)malloc(sizeof(agent_datastate_t));
-  Exit__when_CHECK_NULL(agent_datastate, 0);
-  
-  agent_datastate->agent_code = NULL;
-  agent_datastate->tasks = NULL;
-  agent_datastate->xml_agent_root = NULL;
-  agent_datastate->xml_root = NULL;
-  agent_datastate->task_progress = 0;
-  agent_datastate->return_data = 0;
-  agent_datastate->number_of_tasks = 0;
-  agent_datastate->persistent = 0;
-  agent_datastate->init_agent_status = 0;
-	agent_datastate->progress_modifier = 0;
 
-  return agent_datastate;
+    agent_datastate_p agent_datastate;
+
+#ifndef MICRO_CORTEX_M
+    agent_datastate = (agent_datastate_p)malloc(sizeof(agent_datastate_t));
+#else
+    agent_datastate = getNewAgentDataState();
+#endif
+
+    Exit__when_CHECK_NULL(agent_datastate, 0);
+
+    agent_datastate->agent_code = NULL;
+    agent_datastate->tasks = NULL;
+    agent_datastate->xml_agent_root = NULL;
+    agent_datastate->xml_root = NULL;
+    agent_datastate->task_progress = 0;
+    agent_datastate->return_data = 0;
+    agent_datastate->number_of_tasks = 0;
+    agent_datastate->persistent = 0;
+    agent_datastate->init_agent_status = 0;
+    agent_datastate->progress_modifier = 0;
+
+    return agent_datastate;
 }
 
 int

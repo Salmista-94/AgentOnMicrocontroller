@@ -80,6 +80,23 @@ mc_platform_p g_mc_platform;
 /* The global agent-callback lock */
 MUTEX_T* g_agent_callback_lock = NULL;
 
+
+
+#define MAX_TASK_Vector                    30
+struct agent_task_t *_ListAGENT_TASK[MAX_TASK_Vector];
+unsigned short int countCreatedTaskVector= 0;
+
+
+agent_task_p getNewVectorTask(void){
+    if (countCreatedTaskVector == MAX_TASK_Vector){
+        fprintf(stderr, "MAX_TASK_Vector: array bound excedent!");
+        return NULL;
+    }else
+        countCreatedTaskVector++;
+        return &_ListAGENT_TASK[countCreatedTaskVector-1];
+}
+
+
 /* **************************** *
  * Libmc Binary Space Functions *
  * **************************** */
@@ -138,7 +155,7 @@ MC_AclSend(MCAgency_t attr, fipa_acl_message_t* acl)
   MCAgent_t agent;
   int num_addresses = 0;
 
-	fipa_acl_message_t* tmp;
+  fipa_acl_message_t* tmp;
 
   err = fipa_acl_Compose(&msg_string, acl);
   if( err ) {
@@ -171,9 +188,9 @@ MC_AclSend(MCAgency_t attr, fipa_acl_message_t* acl)
         fprintf(stderr, "Could not find local agent:%s. %s:%d\n",
             acl->receiver->fipa_agent_identifiers[i]->name,
             __FILE__, __LINE__);
-				continue;
+        continue;
       }
-			tmp = fipa_acl_message_Copy(acl);
+      tmp = fipa_acl_message_Copy(acl);
       MC_AclPost(agent, tmp);
     } else {
       //printf("SENDING Message to: %s\n", acl->receiver->fipa_agent_identifiers[i]->addresses->urls[0]->str);
@@ -212,12 +229,12 @@ MC_AclSend(MCAgency_t attr, fipa_acl_message_t* acl)
 
       message_Send
         (
-				 attr->mc_platform,
+         attr->mc_platform,
          mc_message,
-				 attr->mc_platform->private_key
+         attr->mc_platform->private_key
         );
       //message_Destroy(mc_message);
-			// We may no longer destroy the message here since we do not know how long it will take message_Send to complete.
+      // We may no longer destroy the message here since we do not know how long it will take message_Send to complete.
       mtp_http_Destroy(msg);
       free(host);
       free(target);
@@ -479,27 +496,27 @@ EXPORTMC int MC_AddStationaryAgent(
     void* agent_args)
 {
 #ifndef _WIN32
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
 #else
-	int stack_size = 0;
+  int stack_size = 0;
 #endif
-	stationary_agent_info_t* stationary_agent_info;
-	stationary_agent_info = (stationary_agent_info_t*)malloc(sizeof(stationary_agent_info_t));
-	stationary_agent_info->args = agent_args;
-	stationary_agent_info->agent = agent_NewBinary(agency->mc_platform);
-	stationary_agent_info->agent->name = strdup(name);
-	stationary_agent_info->attr = agency;
-	stationary_agent_info->agency = agency;
+  stationary_agent_info_t* stationary_agent_info;
+  stationary_agent_info = (stationary_agent_info_t*)malloc(sizeof(stationary_agent_info_t));
+  stationary_agent_info->args = agent_args;
+  stationary_agent_info->agent = agent_NewBinary(agency->mc_platform);
+  stationary_agent_info->agent->name = strdup(name);
+  stationary_agent_info->attr = agency;
+  stationary_agent_info->agency = agency;
   if(!agency->mc_platform->agent_processing)
     ListWRLock(agency->mc_platform->agent_queue);
-	ListAdd(agency->mc_platform->agent_queue, stationary_agent_info->agent);
+  ListAdd(agency->mc_platform->agent_queue, stationary_agent_info->agent);
   if(!agency->mc_platform->agent_processing)
     ListWRUnlock(agency->mc_platform->agent_queue);
 #ifndef _WIN32
-	THREAD_CREATE(&stationary_agent_info->thread, (void*(*)(void*))agent_thread, stationary_agent_info);
+  THREAD_CREATE(&stationary_agent_info->thread, (void*(*)(void*))agent_thread, stationary_agent_info);
 #else
-	THREAD_CREATE(&stationary_agent_info->thread, (LPTHREAD_START_ROUTINE)agent_thread, stationary_agent_info);
+  THREAD_CREATE(&stationary_agent_info->thread, (LPTHREAD_START_ROUTINE)agent_thread, stationary_agent_info);
 #endif
   return 0;
 }
@@ -509,14 +526,14 @@ EXPORTMC int MC_StationaryAgent_Register(
     stationary_agent_info_t* stationary_agent_info,
     const char* name )
 {
-	stationary_agent_info->args = NULL;
-	stationary_agent_info->agent = agent_NewBinary(agency->mc_platform);
-	stationary_agent_info->agent->name = strdup(name);
-	stationary_agent_info->attr = agency;
-	stationary_agent_info->agency = agency;
+  stationary_agent_info->args = NULL;
+  stationary_agent_info->agent = agent_NewBinary(agency->mc_platform);
+  stationary_agent_info->agent->name = strdup(name);
+  stationary_agent_info->attr = agency;
+  stationary_agent_info->agency = agency;
   if(!agency->mc_platform->agent_processing)
     ListWRLock(agency->mc_platform->agent_queue);
-	ListAdd(agency->mc_platform->agent_queue, stationary_agent_info->agent);
+  ListAdd(agency->mc_platform->agent_queue, stationary_agent_info->agent);
   if(!agency->mc_platform->agent_processing)
     ListWRUnlock(agency->mc_platform->agent_queue);
   return 0;
@@ -628,7 +645,7 @@ EXPORTMC int MC_AgentAddTask(
   return 0;
 }
 
-EXPORTMC int MC_AgentAddTaskFromFile(
+EXPORTMC int MC_AgentAddTaskFromFile( //revisando por aca
     MCAgent_t agent, 
     const char* filename, 
     const char* return_var_name, 
@@ -653,7 +670,9 @@ EXPORTMC int MC_AgentAddTaskFromFile(
   fptr = fopen(filename, "r");
   len = fread(code, sizeof(char), codesize, fptr);
   fclose(fptr);
-  if(len <= 0) {return -1;}
+
+  if(len <= 0) return -1;
+
   return_val = MC_AgentAddTask(
       agent,
       code,
@@ -1157,10 +1176,10 @@ MC_CallAgentFuncV(
 
 EXPORTMC int
 MC_CallAgentFuncVar(
-		    MCAgent_t agent,
-		    const char* funcName,
-		    void* returnVal,
-		    ChVaList_t varg)
+        MCAgent_t agent,
+        const char* funcName,
+        void* returnVal,
+        ChVaList_t varg)
 {
   int return_code;
   MUTEX_LOCK(agent->run_lock);
@@ -1227,7 +1246,7 @@ MC_ComposeAgentS(
     const char* return_var_name,
     const char* server,
     int persistent,
-		const char* workgroup_code
+    const char* workgroup_code
     )
 {
   printf("\nThe MC_ComposeAgentS function is now deprecated due to its\n\
@@ -1245,7 +1264,7 @@ MC_ComposeAgentS(
 }
 
 EXPORTMC MCAgent_t
-MC_ComposeAgentWithWorkgroup(
+MC_ComposeAgentWithWorkgroup( //este es un 1º subnivel, trabajando aqui!
     const char* name,
     const char* home,
     const char* owner, 
@@ -1253,12 +1272,14 @@ MC_ComposeAgentWithWorkgroup(
     const char* return_var_name,
     const char* server,
     int persistent,
-		const char* workgroup_code
+    const char* workgroup_code
     )
 {
   agent_p agent;
   agent = agent_New();
+
   if (agent == NULL) return NULL;
+
   MC_InitializeAgentWithWorkgroup(
       agent,
       name,
@@ -1273,7 +1294,7 @@ MC_ComposeAgentWithWorkgroup(
 }
 
 EXPORTMC int
-MC_InitializeAgentWithWorkgroup(
+MC_InitializeAgentWithWorkgroup( //este es un 2º subnivel, trabajando aqui!
     MCAgent_t agent,
     const char* name,
     const char* home,
@@ -1282,10 +1303,14 @@ MC_InitializeAgentWithWorkgroup(
     const char* return_var_name,
     const char* server,
     int persistent,
-		const char* workgroup_code
+    const char* workgroup_code
     )
 {
-  agent->name = strdup(name);
+  //strdup(ptr1)
+  //ptr2 = malloc(strlen(ptr1)+1);
+  //strcpy(ptr2,ptr1);
+
+  agent->name = strdup(name);// implementar con &GlobalStringsVector[countCreatedString]
   agent->home = strdup(home);
   agent->owner = strdup(owner);
 
@@ -1294,7 +1319,7 @@ MC_InitializeAgentWithWorkgroup(
   agent->agent_type = MC_LOCAL_AGENT;
   agent->agent_status = MC_WAIT_MESSGSEND;
 
-  agent->datastate = agent_datastate_New();
+  agent->datastate = agent_datastate_New();//hasta aca esta resuelto!
   agent->datastate->number_of_tasks = 1;
   agent->datastate->agent_code_ids = (char**)malloc(
       sizeof(char*)*2);
@@ -1320,9 +1345,12 @@ MC_InitializeAgentWithWorkgroup(
 
   agent->datastate->agent_code = agent->datastate->agent_codes[0];
 
-  agent->datastate->tasks = (agent_task_t**)malloc(
-      sizeof(agent_task_t*));
-  agent->datastate->tasks[0] = agent_task_New();
+  // agent->datastate->tasks = (agent_task_t**)malloc(
+      // sizeof(agent_task_t*));
+  
+  agent->datastate->tasks = getNewVectorTask();
+  agent->datastate->tasks[0] = agent_task_New();// ignorando los malloc() de arriba llegue hasta aca!
+
   if(return_var_name == NULL) {
     agent->datastate->tasks[0]->var_name = strdup("no-return");
   } else {
@@ -1337,12 +1365,12 @@ MC_InitializeAgentWithWorkgroup(
     fprintf(stderr, "Memory Error %s:%d\n", __FILE__, __LINE__);
   }
 
-	if(workgroup_code != NULL) {
-		agent->wg_code = strdup(workgroup_code);
-		if (agent->wg_code == NULL) {
-			fprintf(stderr, "Memory Error %s:%d\n", __FILE__, __LINE__);
-		}
-	}
+  if(workgroup_code != NULL) {
+    agent->wg_code = strdup(workgroup_code);
+    if (agent->wg_code == NULL) {
+      fprintf(stderr, "Memory Error %s:%d\n", __FILE__, __LINE__);
+    }
+  }
   agent->datastate->tasks[0]->persistent = persistent;
   return 0;
 }
@@ -1402,7 +1430,7 @@ EXPORTMC MCAgent_t MC_ComposeAgentFromFileS(
     const char* return_var_name,
     const char* server,
     int persistent,
-		const char* workgroup_code
+    const char* workgroup_code
     )
 {
   printf("\nThe MC_ComposeAgentFromFileS() function is deprecated due to \n\
@@ -1419,7 +1447,7 @@ EXPORTMC MCAgent_t MC_ComposeAgentFromFileS(
       workgroup_code);
 }
 
-EXPORTMC MCAgent_t MC_ComposeAgentFromFileWithWorkgroup(
+EXPORTMC MCAgent_t MC_ComposeAgentFromFileWithWorkgroup( // estoy trabajando aqui!
     const char* name,
     const char* home,
     const char* owner, 
@@ -1427,7 +1455,7 @@ EXPORTMC MCAgent_t MC_ComposeAgentFromFileWithWorkgroup(
     const char* return_var_name,
     const char* server,
     int persistent,
-		const char* workgroup_code
+    const char* workgroup_code
     )
 {
   MCAgent_t agent;
@@ -1448,7 +1476,8 @@ EXPORTMC MCAgent_t MC_ComposeAgentFromFileWithWorkgroup(
   fptr = fopen(filename, "r");
   len = fread(code, sizeof(char), codesize, fptr);
   fclose(fptr);
-  if(len <= 0) {return NULL;}
+
+  if(len <= 0) return NULL;
 
   agent = MC_ComposeAgentWithWorkgroup(
      name, 
@@ -1458,7 +1487,8 @@ EXPORTMC MCAgent_t MC_ComposeAgentFromFileWithWorkgroup(
      return_var_name, 
      server,
      persistent,
-		 workgroup_code
+     workgroup_code,
+     agent_pointer
      );
   free(code);
 
@@ -1474,7 +1504,7 @@ EXPORTMC int MC_InitializeAgentFromFileWithWorkgroup(
     const char* return_var_name,
     const char* server,
     int persistent,
-		const char* workgroup_code
+    const char* workgroup_code
     )
 {
   struct stat buffer;
@@ -2124,132 +2154,149 @@ MC_HaltAgency(MCAgency_t attr) /*{{{*/
   return 0;
 } /*}}}*/
 
+
 EXPORTMC MCAgency_t 
 MC_Initialize( /*{{{*/
     int port,
     MCAgencyOptions_t *options)
 {
-  MCAgency_t ret;
-  int i=0;
-  int options_malloc = 0;
-  char privkey[1210];   // private key after decryption
+    MCAgency_t ret;
+    int i=0;
+    int options_malloc = 0;
+    char privkey[1210];   // private key after decryption
 #ifdef NEW_SECURITY
-  char buf[5];
-  FILE* f;
+    char buf[5];
+    FILE* f;
 #endif
-  if(options && options->initialized != MC_INITIALIZED_CODE) {
+  
+    if(options && options->initialized != MC_INITIALIZED_CODE) {
 #ifdef _WIN32
     /* TODO: Popup message box */
 #else
+    /* TODO: Popup message box */
 #endif
-    return NULL;
-  }
+        return NULL;
+    }
 
-  printf("Initializing callback lock...\n");
-  if(g_agent_callback_lock == NULL) {
-    new_Mutex(&(g_agent_callback_lock));
-  }
+    printf("Initializing callback lock...\n");
+    if(g_agent_callback_lock == NULL)
+        new_Mutex(&(g_agent_callback_lock));
+    
 
-  memset(privkey, '\0', 1210);
-  ret = (MCAgency_t)malloc(sizeof(struct agency_s));
-  if (ret == NULL) {return NULL;}
+    memset(privkey, '\0', 1210);
+    //ret = (MCAgency_t)malloc(sizeof(struct agency_s));
 
-  ret->hostName = (char*)malloc(HOST_NAME_MAX);
-  if (ret->hostName == NULL) {return NULL;}
-  gethostname(ret->hostName, HOST_NAME_MAX);
-  /*Save some memory */
-  ret->hostName = (char*)realloc(ret->hostName, sizeof(char)*(strlen(ret->hostName)+1));
-  if (ret->hostName == NULL) {return NULL;}
-  ret->portno = port;
-  ret->server = 1;
-  ret->client = 0;
-  ret->default_agentstatus = -1;
+    ret = getNewAgent();
 
-  /* Set up agency options */
-  if(options==NULL) {
-    options = (MCAgencyOptions_t*)malloc(sizeof(MCAgencyOptions_t));
-    MC_InitializeAgencyOptions(options);
-    options_malloc = 1;
-  }
-  ret->threads = options->threads;
-  ret->default_agentstatus = options->default_agent_status;
-  for(i = 0; i < MC_THREAD_ALL; i++) {
-    ret->stack_size[i] = options->stack_size[i];
-  }
-  ret->initInterps = options->initInterps;
-  /* End agency options */
+    if (ret == NULL) return NULL;
 
-  ret->bluetooth = options->bluetooth;
-  printf("Initializing platform...\n");
-  ret->mc_platform = mc_platform_Initialize(ret, options->ch_options);
-  //ret->mc_platform->interp_options = options->ch_options;
-  printf("Done.\n");
+    ret->hostName = (char*)malloc(HOST_NAME_MAX);
+
+    if (ret->hostName == NULL) return NULL;
+
+    gethostname(ret->hostName, HOST_NAME_MAX);
+    /*Save some memory */
+    ret->hostName = (char*)realloc(ret->hostName, sizeof(char)*(strlen(ret->hostName)+1));
+
+    if (ret->hostName == NULL) return NULL;
+
+    ret->portno = port;
+    ret->server = 1;
+    ret->client = 0;
+    ret->default_agentstatus = -1;
+
+    /* Set up agency options */
+    if(options==NULL) {
+        options = (MCAgencyOptions_t*)malloc(sizeof(MCAgencyOptions_t));
+        MC_InitializeAgencyOptions(options);
+        options_malloc = 1;
+    }
+    ret->threads = options->threads;
+    ret->default_agentstatus = options->default_agent_status;
+
+    for(i = 0; i < MC_THREAD_ALL; i++)
+        ret->stack_size[i] = options->stack_size[i];
+    
+
+#ifndef MICRO_CORTEX_M
+    ret->initInterps = options->initInterps;
+#endif
+
+    /* End agency options */
+
+    ret->bluetooth = options->bluetooth;
+    printf("Initializing platform...\n");
+    ret->mc_platform = mc_platform_Initialize(ret, options->ch_options);
+    //ret->mc_platform->interp_options = options->ch_options;
+    printf("Done.\n");
 
 #ifdef NEW_SECURITY
-	if (options->priv_key_filename != NULL) {
-		ret->priv_key_filename = strdup(options->priv_key_filename);
-	} else {
-		ret->priv_key_filename = strdup("rsa_priv");
-	}
-	if (options->known_host_filename != NULL) {
-		ret->known_host_filename = strdup(options->known_host_filename);
-	} else {
-		ret->known_host_filename = strdup("known_host");
-	}
-  /* check whether private key file is encryt or not */
- memset(buf,'\0', 4);
+    if (options->priv_key_filename != NULL)
+        ret->priv_key_filename = strdup(options->priv_key_filename);
+    else
+        ret->priv_key_filename = strdup("rsa_priv");
+    
 
-  if( (f = fopen(ret->priv_key_filename, "r") ) == NULL) {
-    fprintf(stderr, "rsa_priv_en file not found \n");
-		fprintf(stderr, "Aborting... at %s:%d\n", __FILE__, __LINE__);
-		exit(0);
-	}
+    if (options->known_host_filename != NULL)
+        ret->known_host_filename = strdup(options->known_host_filename);
+    else
+        ret->known_host_filename = strdup("known_host");
+    
+    /* check whether private key file is encryt or not */
+    memset(buf,'\0', 4);
 
-  fread (buf, 1, 4, f);
-
-  if(buf[0]=='N' && buf[1] == ' ' && buf[2]=='=' && buf[3]==' '){
-    fread(privkey, 1210, 1, f);
-    fclose(f);
-  }
-  else{   
-    fclose(f);
-    /* prompt for passphrase if its NULL */ 
-    if(options->passphrase[0] == '\0'){
-      printf("Please enter the passphrase to decrypt private key  ");
-      scanf("%s", options->passphrase); 
-    }  
-    /* decrypting Private key */  
-    if( read_encrypted_file(ret->priv_key_filename, privkey, options->passphrase) == -1){
-      printf("Unable to read private key: passphase is wrong or file not exist\n");
-      printf("Press any key to exit \n");
-      getchar();
-      exit(0); 
+    if( (f = fopen(ret->priv_key_filename, "r") ) == NULL) {
+        fprintf(stderr, "rsa_priv_en file not found \n");
+        fprintf(stderr, "Aborting... at %s:%d\n", __FILE__, __LINE__);
+        exit(0);
     }
-  }
 
-  if (privkey == NULL){
-     printf("Note: private key is Null \n");	
-	 printf("please verify the private key file or generate it again. \n");
-	 printf("Exiting Mobile-C Agency ... \n");
-	 getchar();
-	 exit(0);
-  }
-  memset(ret -> mc_platform -> private_key, '\0', 1210);
-  strcpy(ret -> mc_platform -> private_key, privkey);
-//  printf("My private key length =%d \n%s.\n",strlen(privkey), privkey);
+    fread (buf, 1, 4, f);
+
+    if(buf[0]=='N' && buf[1] == ' ' && buf[2]=='=' && buf[3]==' '){
+        fread(privkey, 1210, 1, f);
+        fclose(f);
+    }
+    else{   
+        fclose(f);
+        /* prompt for passphrase if its NULL */ 
+        if(options->passphrase[0] == '\0'){
+            printf("Please enter the passphrase to decrypt private key  ");
+            scanf("%s", options->passphrase); 
+        }  
+        /* decrypting Private key */  
+        if( read_encrypted_file(ret->priv_key_filename, privkey, options->passphrase) == -1){
+            printf("Unable to read private key: passphase is wrong or file not exist\n");
+            printf("Press any key to exit \n");
+            getchar();
+            exit(0); 
+        }
+    }
+
+    if (privkey == NULL){
+        printf("Note: private key is Null \n");  
+        printf("please verify the private key file or generate it again. \n");
+        printf("Exiting Mobile-C Agency ... \n");
+        getchar();
+        exit(0);
+    }
+    memset(ret -> mc_platform -> private_key, '\0', 1210);
+    strcpy(ret -> mc_platform -> private_key, privkey);
+    //  printf("My private key length =%d \n%s.\n",strlen(privkey), privkey);
 #endif /* NEW_SECURITY */
 
-  ret->agentInitCallback = NULL;
-  ret->agentInitUserData = NULL;
+    ret->agentInitCallback = NULL;
+    ret->agentInitUserData = NULL;
 
-  /* Set up the global platform */
-  g_mc_platform = ret->mc_platform;
+    /* Set up the global platform */
+    g_mc_platform = ret->mc_platform;
 
-  if (options_malloc)
-    free(options);
+    if (options_malloc)
+        free(options);
 
-  return ret;
+    return ret;
 } /*}}}*/
+
 
 EXPORTMC int 
 MC_InitializeAgencyOptions(struct MCAgencyOptions_s* options) /*{{{*/
@@ -2265,14 +2312,18 @@ MC_InitializeAgencyOptions(struct MCAgencyOptions_s* options) /*{{{*/
   }
   memset(options->passphrase, '\0', 32);
 
-	options->known_host_filename = NULL;
-	options->priv_key_filename = NULL;
+  options->known_host_filename = NULL;
+  options->priv_key_filename = NULL;
   options->bluetooth = 0;
-
+  
+#ifndef MICRO_CORTEX_M
   options->initInterps = 4; // 4 interpreters are loaded
+#endif
+
   options->initialized = MC_INITIALIZED_CODE;
   return 0;
 } /*}}}*/
+
 
 EXPORTMC int
 MC_LoadAgentFromFile(MCAgency_t attr, const char* filename)
@@ -3972,7 +4023,7 @@ MC_ComposeAgentWithWorkgroup_chdl(void *varg) /*{{{*/
       return_var_name,
       server,
       persistent,
-			workgroup_code);
+      workgroup_code);
   Ch_VaEnd(interp, ap);
   return retval;
 } /*}}}*/

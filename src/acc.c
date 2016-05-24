@@ -86,17 +86,34 @@ typedef unsigned char bool;
 
 #define BACKLOG 200
 
+
+#define MAX_ACCs                 120
+struct acc_t _ListACC[MAX_ACCs];
+unsigned short int count_ACCs= 0;
+
+
+acc_p getNewACC(){
+    if (count_ACCs == MAX_ACCs){
+        fprintf(stderr, "MAX_ACCs: array bound excedent!");
+        return NULL;
+    }
+    count_ACCs++;
+    return &_ListAMS[count_ACCs-1]
+}
+
+
+
 acc_p
 acc_Initialize(struct mc_platform_s* mc_platform)
 {
   acc_p acc;
-  acc = (acc_p)malloc(sizeof(acc_t));
+  acc = getNewACC();
   acc->mc_platform = mc_platform;
 
   acc->waiting = 0;
   new_Mutex(&(acc->waiting_lock));
   //
-  acc->waiting_cond = (COND_T*)malloc(sizeof(COND_T));
+  acc->waiting_cond = getNewMutexCond();
   COND_INIT(acc->waiting_cond);
   //
   //new_COND(&(acc->waiting_cond));

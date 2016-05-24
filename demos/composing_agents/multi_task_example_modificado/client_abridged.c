@@ -3,13 +3,12 @@
 #include <stdio.h>
 #include <libmc.h>
 
-struct agent_s _AGENT;
 
 int main() 
 {
   MCAgency_t agency;
   MCAgencyOptions_t options;
-  //MCAgent_t agent;
+  MCAgent_t agent;
   double *agent_return_value;
   int task_num;
   int local_port=5050;
@@ -20,8 +19,7 @@ int main()
   agency = MC_Initialize(local_port, &options);
 
   /* Compose the agent from a task source file */
-  //agent = MC_ComposeAgentFromFile(
-  MC_ComposeAgentFromFile(
+  agent = MC_ComposeAgentFromFile(
       "mobagent3",        /* Name */
       "localhost:5050",   /* Home - This is the host the agent will return to
                            * when it has finished its tasks. */
@@ -30,19 +28,18 @@ int main()
       "results_task1",     /* Return Variable Name */
       "localhost:5051",   /* server/destination host */
       0,                   /* persistent */
-      &_AGENT //Global_Unique_Agent
       );
 
   /* Add one more task */
   MC_AgentAddTaskFromFile(
-      &_AGENT,              /* Agent handle */
+      agent,              /* Agent handle */
       "task2.c",          /* Task code file name */
       "results_task2",       /* Return Variable Name */
       "localhost:5052",   /* server/destination host */
       0 );                /* Persistent */
   
   /* Add the agent */
-  MC_AddAgent(agency, &_AGENT);
+  MC_AddAgent(agency, agent);
 
   MC_End(agency);
   return 0;

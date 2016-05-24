@@ -46,16 +46,38 @@
 #include "include/mc_error.h"
 #include "mc_list/list.h"
 
+
+#define MAX_TASKS                    50
+struct agent_task_t _ListTasks[MAX_TASKS];
+unsigned short int countCreatedTasks= 0;
+
+
+
+
 agent_task_p
-agent_task_New(void)
+agent_task_New(void) //Modificando aqui
 {
   agent_task_p task;
-  task = (agent_task_p)malloc(sizeof(agent_task_t));
-  if(task == NULL) {
-    fprintf(stderr, "Memory Error. %s:%d\n", __FILE__, __LINE__);
-  } else {
+
+#ifndef MICRO_CORTEX_M
+    task = (agent_task_p)malloc(sizeof(agent_task_t));
+    if(task == NULL)
+        fprintf(stderr, "Memory Error. %s:%d\n", __FILE__, __LINE__);
+    else 
+        memset(task, 0, sizeof(agent_task_t)); 
+  
+#else
+    if (countCreatedTasks == MAX_TASKS){
+        fprintf(stderr, "MAX_TASKS: array bound excedent!");
+        return NULL;
+    }
+  
+    task = &_ListTasks[countCreatedTasks];
+    countCreatedTasks++;
     memset(task, 0, sizeof(agent_task_t)); 
-  }
+  
+#endif  
+
   task->agent_variable_list = ListInitialize();
 
   task->saved_variables = NULL;
@@ -69,74 +91,74 @@ agent_task_New(void)
 agent_task_p 
 agent_task_Copy(agent_task_p task)
 {
-	int i;
-	interpreter_variable_data_t* interp_data;
-	agent_task_p cp_task;
-	cp_task = (agent_task_p)malloc(sizeof(agent_task_t));
+    int i;
+    interpreter_variable_data_t* interp_data;
+    agent_task_p cp_task;
+    cp_task = (agent_task_p)malloc(sizeof(agent_task_t));
 
-	cp_task->number_of_elements = task->number_of_elements;
-	cp_task->size_of_element_array = task->size_of_element_array;
-	cp_task->persistent = task->persistent;
-	cp_task->init_agent_status = task->init_agent_status;
+    cp_task->number_of_elements = task->number_of_elements;
+    cp_task->size_of_element_array = task->size_of_element_array;
+    cp_task->persistent = task->persistent;
+    cp_task->init_agent_status = task->init_agent_status;
 
-	cp_task->var_name = (char*)malloc
-		(
-		 sizeof(char) * 
-		 (strlen(task->var_name) + 1)
-		);
-	strcpy(cp_task->var_name, task->var_name);
+    cp_task->var_name = (char*)malloc
+        (
+         sizeof(char) * 
+         (strlen(task->var_name) + 1)
+        );
+    strcpy(cp_task->var_name, task->var_name);
 
-	cp_task->server_name = (char*)malloc
-		(
-		 sizeof(char) * 
-		 (strlen(task->server_name) + 1)
-		);
-	strcpy(cp_task->server_name, task->server_name);
+    cp_task->server_name = (char*)malloc
+        (
+         sizeof(char) * 
+         (strlen(task->server_name) + 1)
+        );
+    strcpy(cp_task->server_name, task->server_name);
 
-	if (task->code_id != NULL) {
-		cp_task->code_id = (char*)malloc
-			(
-			 sizeof(char) * 
-			 (strlen(task->code_id) + 1)
-			);
-		strcpy(cp_task->code_id, task->code_id);
-	} else {
-		cp_task->code_id = NULL;
-	}
+    if (task->code_id != NULL) {
+        cp_task->code_id = (char*)malloc
+            (
+             sizeof(char) * 
+             (strlen(task->code_id) + 1)
+            );
+        strcpy(cp_task->code_id, task->code_id);
+    } else {
+        cp_task->code_id = NULL;
+    }
 
-	if(task->agent_return_data != NULL) {
-		cp_task->agent_return_data = interpreter_variable_data_Copy(task->agent_return_data);
-	}
+    if(task->agent_return_data != NULL) {
+        cp_task->agent_return_data = interpreter_variable_data_Copy(task->agent_return_data);
+    }
 
-	/* Copy the agent variable list */
-	cp_task->agent_variable_list = ListInitialize();
+    /* Copy the agent variable list */
+    cp_task->agent_variable_list = ListInitialize();
   ListWRLock(task->agent_variable_list);
-	for(i = 0; i < task->agent_variable_list->size; i++) {
-		interp_data = (interpreter_variable_data_t*)ListSearch(
-				(list_p)task->agent_variable_list,
-				i );
-		if (interp_data == NULL) { continue; }
-		interp_data = interpreter_variable_data_Copy(interp_data);
-		ListAdd(
-				(list_p)cp_task->agent_variable_list,
-				interp_data
-				);
-	}
+    for(i = 0; i < task->agent_variable_list->size; i++) {
+        interp_data = (interpreter_variable_data_t*)ListSearch(
+                (list_p)task->agent_variable_list,
+                i );
+        if (interp_data == NULL) { continue; }
+        interp_data = interpreter_variable_data_Copy(interp_data);
+        ListAdd(
+                (list_p)cp_task->agent_variable_list,
+                interp_data
+                );
+    }
   ListWRUnlock(task->agent_variable_list);
 
-	cp_task->saved_variables = (char**)malloc(sizeof(char*) * (task->num_saved_variables+1));
-	for(i = 0; i < task->num_saved_variables; i++) {
-		cp_task->saved_variables[i] = strdup(task->saved_variables[i]);
-	}
-	cp_task->saved_variables[i] = NULL;
-	cp_task->num_saved_variables = task->num_saved_variables;
+    cp_task->saved_variables = (char**)malloc(sizeof(char*) * (task->num_saved_variables+1));
+    for(i = 0; i < task->num_saved_variables; i++) {
+        cp_task->saved_variables[i] = strdup(task->saved_variables[i]);
+    }
+    cp_task->saved_variables[i] = NULL;
+    cp_task->num_saved_variables = task->num_saved_variables;
 
   ListRDLock(task->agent_file_list);
   cp_task->agent_file_list = 
       ListCopy(task->agent_file_list, (ListElemCopyFunc_t)agent_file_data_Copy);
   ListRDUnlock(task->agent_file_list);
 
-	return cp_task;
+    return cp_task;
 }
 
 int

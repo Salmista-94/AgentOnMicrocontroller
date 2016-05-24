@@ -239,7 +239,11 @@ typedef struct agency_s {
     char *filename;
     int portno;                         /*!< Local port number */
     int portnoc;
+  
+#ifndef MICRO_CORTEX_M
     int initInterps;
+#endif
+
     struct mc_platform_s* mc_platform;  /*!< Local MobileC Platform */
     int default_agentstatus;            /*!< Agency default agent status */
     int threads;                        /*!< flag which determines which threads to start */
@@ -273,7 +277,11 @@ typedef struct MCAgencyOptions_s{
 
     char *known_host_filename;
     char *priv_key_filename;
+  
+#ifndef MICRO_CORTEX_M
     int initInterps;
+#endif
+
     int bluetooth; /* Startup in bluetooth mode */
     ChOptions_t* ch_options;
 

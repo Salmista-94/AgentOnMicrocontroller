@@ -49,9 +49,42 @@
 #include "include/mc_platform.h"
 #include "include/macros.h"
 
+
+#define MAX_Mutex                    30
+struct COND_T _ListMutex[MAX_Mutex];
+unsigned short int countCreatedMutexs= 0;
+
+
+#define MAX_MutexCond                    60
+struct COND_T _ListMutexCond[MAX_MutexCond];
+unsigned short int countCreatedMutexConds= 0;
+
+
+
+
+MUTEX_T* getNewMutex(){
+    if (countCreatedMutexs == MAX_Mutex){
+        fprintf(stderr, "MAX_Mutex: array bound excedent!");
+        return NULL;
+    }
+    countCreatedMutexs++;
+    return &_ListMutexCond[countCreatedMutexs-1]
+}
+
+COND_T* getNewMutexCond(){
+    if (countCreatedMutexConds == MAX_MutexCond){
+        fprintf(stderr, "MAX_MutexCond: array bound excedent!");
+        return NULL;
+    }
+    countCreatedMutexConds++;
+    return &_ListMutexCond[countCreatedMutexConds-1]
+}
+
+
+
 #define DEFAULT_HOSTNAME_LENGTH 200
 mc_platform_p
-mc_platform_Initialize(MCAgency_t agency, ChOptions_t* ch_options)
+mc_platform_Initialize(MCAgency_t agency)//, ChOptions_t* ch_options)//revisando por aca
 {
   int i;
 #ifdef _WIN32 /* WinSock variables */
@@ -62,7 +95,7 @@ mc_platform_Initialize(MCAgency_t agency, ChOptions_t* ch_options)
   char hostname[DEFAULT_HOSTNAME_LENGTH];
 
   mc_platform_p mc_platform;
-	ChInterp_t* interp;
+  ChInterp_t* interp;
   
   /* Allocate Memory */
   mc_platform = (mc_platform_p)malloc(sizeof(mc_platform_t));
@@ -72,9 +105,9 @@ mc_platform_Initialize(MCAgency_t agency, ChOptions_t* ch_options)
   mc_platform->err = 0;
   mc_platform->default_agentstatus = agency->default_agentstatus;
 
-  for(i = 0; i < MC_THREAD_ALL; i++) {
+  for(i = 0; i < MC_THREAD_ALL; i++)
     mc_platform->stack_size[i] = agency->stack_size[i];
-  }
+  
 
   mc_platform->bluetooth = agency->bluetooth;
   mc_platform->agency = agency;
@@ -83,19 +116,19 @@ mc_platform_Initialize(MCAgency_t agency, ChOptions_t* ch_options)
 #ifdef _WIN32
   nret = WSAStartup(wVersionRequested, &(mc_platform->wsaData));
   if (nret != 0) {
-	printf("\nWSAStartup Error %d. %s:%d\n", nret, __FILE__,__LINE__);
-	exit(0);
+    printf("\nWSAStartup Error %d. %s:%d\n", nret, __FILE__,__LINE__);
+    exit(0);
   }
   if (mc_platform->wsaData.wVersion != wVersionRequested) {
-	printf("\nWrong Winsock Version %s:%d\n", __FILE__,__LINE__);
-	exit(0);
+    printf("\nWrong Winsock Version %s:%d\n", __FILE__,__LINE__);
+    exit(0);
   }
 #endif /* _WIN32 */
 
   gethostname(hostname, DEFAULT_HOSTNAME_LENGTH);
-  if (strlen(hostname) < 1) {
-	  strcpy(hostname, "localhost");
-  }
+  if (strlen(hostname) < 1)
+    strcpy(hostname, "localhost");
+  
   localhost = gethostbyname(hostname); /* FIXME */
 
   mc_platform->hostname = (char*)malloc(sizeof(char)*DEFAULT_HOSTNAME_LENGTH);
@@ -112,7 +145,7 @@ mc_platform_Initialize(MCAgency_t agency, ChOptions_t* ch_options)
   mc_platform->hostname = (char*)realloc( mc_platform->hostname, sizeof(char) * (strlen(mc_platform->hostname)+1));
   Return_and_Report_MErr__when_CHECK_NULL(mc_platform->hostname, agency);
   mc_platform->port = agency->portno;
-  mc_platform->interp_options = ch_options;
+  //mc_platform->interp_options = ch_options;
 
   mc_platform->message_queue     = ListInitialize();
   mc_platform->agent_queue       = ListInitialize();
@@ -121,119 +154,127 @@ mc_platform_Initialize(MCAgency_t agency, ChOptions_t* ch_options)
   mc_platform->syncList          = ListInitialize();
   mc_platform->barrier_queue     = ListInitialize();
 
+
+#ifndef MICRO_CORTEX_M
   mc_platform->interpreter_queue = ListInitialize();
+
   mc_platform->initInterps = agency->initInterps;
+#endif
 
   mc_platform->agent_processing = 0;
   //printf("Mobile-C:  Initializing %d interpreters\n", mc_platform->initInterps);
   /* Fill the interpreter queue with interpreters, initialized and ready to go. */
-  printf("Initializing interpreters...\n");
-  for(i = 0; i < mc_platform->initInterps; i++) {
-    interp = (ChInterp_t*)malloc(sizeof(ChInterp_t));
-    if( mc_platform->interp_options == NULL ) {
-      printf("Calling Ch_Initialize...\n");
-      if(Ch_Initialize(interp, NULL)) {
-        printf("CH INIT ERROR \n");
-        exit(EXIT_FAILURE);
-      }
-      printf("Done.\n");
-    } 
-    else {
-      printf("Calling Ch_Initialize...\n");
-      if(Ch_Initialize(interp, mc_platform->interp_options)) {
-        printf("CH INIT ERROR \n");
-        exit(EXIT_FAILURE);
-      }
-      printf("Done.\n");
+
+#ifndef MICRO_CORTEX_M
+    printf("Initializing interpreters...\n");
+    for(i = 0; i < mc_platform->initInterps; i++) {
+        interp = (ChInterp_t*)malloc(sizeof(ChInterp_t));
+        if( mc_platform->interp_options == NULL ) {
+            printf("Calling Ch_Initialize...\n");
+            if(Ch_Initialize(interp, NULL)) {
+                printf("CH INIT ERROR \n");
+                exit(EXIT_FAILURE);
+            }
+            printf("Done.\n");
+        }else {
+            printf("Calling Ch_Initialize...\n");
+            if(Ch_Initialize(interp, mc_platform->interp_options)) {
+                printf("CH INIT ERROR \n");
+                exit(EXIT_FAILURE);
+            }
+            printf("Done.\n");
+        }
+
+        // Initialize all of the global variables
+        agent_ChScriptInitVar(interp); //<--------------------------------------------
+
+        ListWRLock(mc_platform->interpreter_queue);
+        ListAdd(mc_platform->interpreter_queue, (void*)interp);
+        ListWRUnlock(mc_platform->interpreter_queue);
     }
+#endif
+    printf("Done Initializing interpreters.\n");
 
-    // Initialize all of the global variables
-    agent_ChScriptInitVar(interp);
+    /* Allocate sync variables */
+    mc_platform->MC_signal_cond = getNewMutexCond();
+    mc_platform->MC_sync_cond   = getNewMutexCond();
+    mc_platform->MC_signal_lock = getNewMutex();
+    mc_platform->MC_sync_lock   = getNewMutex();
+    mc_platform->MC_steer_lock  = getNewMutex();
+    mc_platform->MC_steer_cond  = getNewMutexCond();
 
-    ListWRLock(mc_platform->interpreter_queue);
-    ListAdd(mc_platform->interpreter_queue, (void*)interp);
-    ListWRUnlock(mc_platform->interpreter_queue);
-  }
-  printf("Done Initializing interpreters.\n");
+    /* Check memory */
+    Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_signal_cond, agency);
+    Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_sync_cond,   agency);
+    Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_signal_lock, agency);
+    Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_sync_lock,   agency);
+    Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_steer_lock,  agency);
+    Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_steer_cond,  agency);
 
-  /* Allocate sync variables */
-  mc_platform->MC_signal_cond = (COND_T*)malloc(sizeof(COND_T));
-  mc_platform->MC_sync_cond   = (COND_T*)malloc(sizeof(COND_T));
-  mc_platform->MC_signal_lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  mc_platform->MC_sync_lock   = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  mc_platform->MC_steer_lock  = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  mc_platform->MC_steer_cond  = (COND_T*)malloc(sizeof(COND_T));
+    /* Init sync variables */
+    COND_INIT ( mc_platform->MC_signal_cond );
+    COND_INIT ( mc_platform->MC_sync_cond );
+    MUTEX_INIT( mc_platform->MC_signal_lock );
+    MUTEX_INIT( mc_platform->MC_sync_lock );
+    MUTEX_INIT( mc_platform->MC_steer_lock );
+    COND_INIT ( mc_platform->MC_steer_cond );
 
-  /* Check memory */
-  Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_signal_cond, agency);
-  Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_sync_cond,   agency);
-  Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_signal_lock, agency);
-  Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_sync_lock,   agency);
-  Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_steer_lock,  agency);
-  Return_and_Report_MErr__when_CHECK_NULL( mc_platform->MC_steer_cond,  agency);
+    /* Initialize quit flag */
+    mc_platform->quit = 0;
+    new_Mutex(&(mc_platform->quit_lock));
+    mc_platform->quit_cond = getNewMutexCond();
+    COND_INIT(mc_platform->quit_cond);
 
-  /* Init sync variables */
-  COND_INIT ( mc_platform->MC_signal_cond );
-  COND_INIT ( mc_platform->MC_sync_cond );
-  MUTEX_INIT( mc_platform->MC_signal_lock );
-  MUTEX_INIT( mc_platform->MC_sync_lock );
-  MUTEX_INIT( mc_platform->MC_steer_lock );
-  COND_INIT ( mc_platform->MC_steer_cond );
+    /* Initialize MC_signal flag */
+    mc_platform->MC_signal = MC_NO_SIGNAL;
 
-  /* Initialize quit flag */
-  mc_platform->quit = 0;
-  new_Mutex(&(mc_platform->quit_lock));
-  mc_platform->quit_cond = (COND_T*)malloc(sizeof(COND_T));
-  COND_INIT(mc_platform->quit_cond);
+    /* Allocate and init giant lock */
+    mc_platform->giant = 1;
+    mc_platform->giant_lock = getNewMutex();
+    Return_and_Report_MErr__when_CHECK_NULL(mc_platform->giant_lock, agency);
+    mc_platform->giant_cond = getNewMutexCond();
+    Return_and_Report_MErr__when_CHECK_NULL(mc_platform->giant_cond, agency);
 
-  /* Initialize MC_signal flag */
-  mc_platform->MC_signal = MC_NO_SIGNAL;
+    MUTEX_INIT( mc_platform->giant_lock );
+    COND_INIT ( mc_platform->giant_cond );
 
-  /* Allocate and init giant lock */
-  mc_platform->giant = 1;
-  mc_platform->giant_lock = (MUTEX_T*)malloc(sizeof(MUTEX_T));
-  Return_and_Report_MErr__when_CHECK_NULL(mc_platform->giant_lock, agency);
-  mc_platform->giant_cond = (COND_T*)malloc(sizeof(COND_T));
-  Return_and_Report_MErr__when_CHECK_NULL(mc_platform->giant_cond, agency);
-
-  MUTEX_INIT( mc_platform->giant_lock );
-  COND_INIT ( mc_platform->giant_cond );
-
-  /* Initialize Agency Modules */
-  mc_platform->df         = df_Initialize(mc_platform);
-  mc_platform->ams        = ams_Initialize(mc_platform);
-  mc_platform->acc        = acc_Initialize(mc_platform);
-  mc_platform->cmd_prompt = cmd_prompt_Initialize(mc_platform);
-  if (GET_THREAD_MODE(agency->threads, MC_THREAD_DF)) {
-    df_Start(mc_platform);
-    MUTEX_LOCK(mc_platform->df->waiting_lock);
-    /* Wait for the thread to fully initialize before continuing */
-    while(mc_platform->df->waiting == 0) {
-      COND_WAIT(mc_platform->df->waiting_cond, mc_platform->df->waiting_lock);
+    /* Initialize Agency Modules */
+    mc_platform->df  =        df_Initialize(mc_platform);
+    mc_platform->ams =        ams_Initialize(mc_platform);
+    mc_platform->acc =        acc_Initialize(mc_platform);
+    mc_platform->cmd_prompt = cmd_prompt_Initialize(mc_platform);
+    
+    if (GET_THREAD_MODE(agency->threads, MC_THREAD_DF)) {
+        df_Start(mc_platform);
+        MUTEX_LOCK(mc_platform->df->waiting_lock);
+        /* Wait for the thread to fully initialize before continuing */
+        while(mc_platform->df->waiting == 0)
+            COND_WAIT(mc_platform->df->waiting_cond, mc_platform->df->waiting_lock);
+    
+        MUTEX_UNLOCK(mc_platform->df->waiting_lock);
     }
-    MUTEX_UNLOCK(mc_platform->df->waiting_lock);
-  }
-  if (GET_THREAD_MODE(agency->threads, MC_THREAD_AMS)) {
-    ams_Start(mc_platform);
-    MUTEX_LOCK(mc_platform->ams->waiting_lock);
-    /* Wait for the thread to fully initialize before continuing */
-    while(mc_platform->ams->waiting == 0) {
-      COND_WAIT(mc_platform->ams->waiting_cond, mc_platform->ams->waiting_lock);
+    if (GET_THREAD_MODE(agency->threads, MC_THREAD_AMS)) {
+        ams_Start(mc_platform);
+        MUTEX_LOCK(mc_platform->ams->waiting_lock);
+        /* Wait for the thread to fully initialize before continuing */
+        while(mc_platform->ams->waiting == 0)
+            COND_WAIT(mc_platform->ams->waiting_cond, mc_platform->ams->waiting_lock);
+    
+        MUTEX_UNLOCK(mc_platform->ams->waiting_lock);
     }
-    MUTEX_UNLOCK(mc_platform->ams->waiting_lock);
-  }
-  if (GET_THREAD_MODE(agency->threads, MC_THREAD_ACC)) {
-    acc_Start(mc_platform);
-    MUTEX_LOCK(mc_platform->acc->waiting_lock);
-    /* Wait for the thread to fully initialize before continuing */
-    while(mc_platform->acc->waiting == 0) {
-      COND_WAIT(mc_platform->acc->waiting_cond, mc_platform->acc->waiting_lock);
+    if (GET_THREAD_MODE(agency->threads, MC_THREAD_ACC)) {
+        acc_Start(mc_platform);
+        MUTEX_LOCK(mc_platform->acc->waiting_lock);
+        /* Wait for the thread to fully initialize before continuing */
+        while(mc_platform->acc->waiting == 0)
+            COND_WAIT(mc_platform->acc->waiting_cond, mc_platform->acc->waiting_lock);
+        
+        MUTEX_UNLOCK(mc_platform->acc->waiting_lock);
     }
-    MUTEX_UNLOCK(mc_platform->acc->waiting_lock);
-  }
-  if (GET_THREAD_MODE(agency->threads, MC_THREAD_CP))
-    cmd_prompt_Start(mc_platform);
-  return mc_platform;
+    if (GET_THREAD_MODE(agency->threads, MC_THREAD_CP))
+        cmd_prompt_Start(mc_platform);
+
+    return mc_platform;
 }
 
 int
@@ -322,24 +363,24 @@ mc_platform_Destroy(mc_platform_p platform)
   return MC_SUCCESS;
 }
 
-ChInterp_t* interpreter_queue_CreateRetrieve( list_t *queue , ChOptions_t* interp_options) {
-	/* This function retrieves an interpreter from the list if there are any
-		on the queue. Otherwise, it creates a new one and returns it. */
-	ChInterp_t* interp;
+ChInterp_t* interpreter_queue_CreateRetrieve( list_t *queue , ChOptions_t* interp_options) {//revisando por aca
+  /* This function retrieves an interpreter from the list if there are any
+    on the queue. Otherwise, it creates a new one and returns it. */
+  ChInterp_t* interp;
   ListWRLock(queue);
-	interp = (ChInterp_t*) ListPop(queue);
-	if (interp == NULL) {
-		interp = (ChInterp_t*)malloc(sizeof(ChInterp_t));
-		if( Ch_Initialize(interp, interp_options) != CH_OK) {
+  interp = (ChInterp_t*) ListPop(queue);
+  if (interp == NULL) {
+    interp = (ChInterp_t*)malloc(sizeof(ChInterp_t));
+    if( Ch_Initialize(interp, interp_options) != CH_OK) {
       /* Could not initialize another interpreter */
       interp = NULL;
     } else {
     /* Initialize the agent intepreter variables */
-      agent_ChScriptInitVar(interp);
+      agent_ChScriptInitVar(interp); //<--------------------------------------------
     }
-	}
+  }
   ListWRUnlock(queue);
-	return interp;
+  return interp;
 }
 
 list_t* mc_platform_GetQueue(mc_platform_p platform, enum MC_QueueIndex_e index)

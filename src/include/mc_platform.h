@@ -57,7 +57,10 @@ struct mc_platform_s{
 
   char* hostname;
   unsigned short port;
+  
+#ifndef MICRO_CORTEX_M
   int initInterps;
+#endif
 
   /* These are the standard agency data structs. */
   list_t* asm_message_queue; /* holds message_t data type */
@@ -88,7 +91,9 @@ struct mc_platform_s{
 
   int stack_size[MC_THREAD_ALL];
 
+#ifndef MICRO_CORTEX_M
   ChOptions_t *interp_options;
+#endif
 
   /* MC Cond Signal System */
   COND_T              *MC_signal_cond;
@@ -116,8 +121,10 @@ struct mc_platform_s{
 
   MCAgency_t agency; /* A pointer to the platform's agency structure */
 
-	/* Need a linked list of Ch interpreters. */
-	list_t* interpreter_queue;
+#ifndef MICRO_CORTEX_M
+    /* Need a linked list of Ch interpreters. */
+    list_t* interpreter_queue;
+#endif
 
   /* Are we using bluetooth? */
   int bluetooth;

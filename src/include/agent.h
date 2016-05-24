@@ -47,7 +47,13 @@ struct agent_s {
 
   /* basic id numbers to determine agent characteristics */
   u_long id;
+  
+#ifndef MICRO_CORTEX_M
   char* name;
+#else
+  char name[74];
+#endif
+
   u_long connect_id;
 #ifndef _WIN32
   time_t arrival_time;
@@ -55,13 +61,24 @@ struct agent_s {
   SYSTEMTIME arrival_time;
 #endif
 
+#ifndef MICRO_CORTEX_M
   char *owner;
   char *home;
   char *sender;
-  int home_port;
 	char *wg_code; /* The workgroup code of the agent. Only agents of the same workgroup should
                     be able to manipulate each other. */
 	char *agent_address;
+
+#else
+  char owner[74];
+  char home[74];
+  char sender[74];
+  char wg_code[74]; /* The workgroup code of the agent. Only agents of the same workgroup should
+                    be able to manipulate each other. */
+  char agent_address[74];
+#endif
+
+  int home_port;
 
   int orphan; /* If an agent is an 'orphan', it means it is not attached to an
                  agency. */
@@ -74,10 +91,15 @@ struct agent_s {
   int return_data;
 
   /* threading variables */
+#ifndef MICRO_CORTEX_M
   ChInterp_t* agent_interp;
+
   /* run_lock should be locked whenever the interpreter is running
    * to prevent simultaneous runs. */
   MUTEX_T *run_lock;
+#else
+  MUTEX_T run_lock;
+#endif
 
 #ifndef _WIN32
   int agent_thread_id; 
@@ -98,9 +120,15 @@ struct agent_s {
 
   struct mc_platform_s *mc_platform;
 
+#ifndef MICRO_CORTEX_M
   MUTEX_T* lock;
   MUTEX_T* agent_status_lock;
   COND_T*  agent_status_cond;
+#else
+  MUTEX_T lock;
+  MUTEX_T agent_status_lock;
+  COND_T  agent_status_cond;
+#endif
 
   list_t* agent_share_data_queue;
 

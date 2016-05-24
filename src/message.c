@@ -75,11 +75,25 @@
           mc_platform->err = MC_ERR_MEMORY;return MC_ERR_MEMORY
 
 
-message_p
-message_New(void)
+#define MAX_Messages                 120
+struct message_t _ListMessage[MAX_Messages];
+unsigned short int count_Messages= 0;
+
+
+message_p getNewMessage(){
+    if (count_Messages == MAX_Messages){
+        fprintf(stderr, "MAX_Messages: array bound excedent!");
+        return NULL;
+    }
+    count_Messages++;
+    return &_ListMessage[count_Messages-1]
+}
+
+
+
+message_p message_New(void)
 {
-  message_p message;
-  message = (message_p)malloc(sizeof(message_t));
+  message_p message = getNewMessage();
   Exit__when_CHECK_NULL(message, 0);
   message->addr = NULL;
   message->connect_id = 0;
