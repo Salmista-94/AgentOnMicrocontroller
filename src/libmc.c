@@ -2155,10 +2155,7 @@ MC_HaltAgency(MCAgency_t attr) /*{{{*/
 } /*}}}*/
 
 
-EXPORTMC MCAgency_t 
-MC_Initialize( /*{{{*/
-    int port,
-    MCAgencyOptions_t *options)
+EXPORTMC MCAgency_t MC_Initialize(int port, MCAgencyOptions_t *options)
 {
     MCAgency_t ret;
     int i=0;

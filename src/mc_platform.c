@@ -50,6 +50,8 @@
 #include "include/macros.h"
 
 
+#define DEFAULT_HOSTNAME_LENGTH 200
+
 #define MAX_Mutex                    30
 struct COND_T _ListMutex[MAX_Mutex];
 unsigned short int countCreatedMutexs= 0;
@@ -58,6 +60,13 @@ unsigned short int countCreatedMutexs= 0;
 #define MAX_MutexCond                    60
 struct COND_T _ListMutexCond[MAX_MutexCond];
 unsigned short int countCreatedMutexConds= 0;
+
+
+#define MAX_Platform                    5
+struct mc_platform_t _ListPlatform[MAX_Platform];
+unsigned short int countCreatedPlatforms= 0;
+
+
 
 
 
@@ -81,8 +90,17 @@ COND_T* getNewMutexCond(){
 }
 
 
+mc_platform_p getNewPlatform(){
+    if (countCreatedPlatforms == MAX_Platform){
+        fprintf(stderr, "MAX_Platform: array bound excedent!");
+        return NULL;
+    }
+    countCreatedPlatforms++;
+    return &_ListPlatform[countCreatedPlatforms-1]
+}
 
-#define DEFAULT_HOSTNAME_LENGTH 200
+
+
 mc_platform_p
 mc_platform_Initialize(MCAgency_t agency)//, ChOptions_t* ch_options)//revisando por aca
 {
@@ -98,7 +116,7 @@ mc_platform_Initialize(MCAgency_t agency)//, ChOptions_t* ch_options)//revisando
   ChInterp_t* interp;
   
   /* Allocate Memory */
-  mc_platform = (mc_platform_p)malloc(sizeof(mc_platform_t));
+  mc_platform = getNewPlatform();
   Return_and_Report_MErr__when_CHECK_NULL(mc_platform, agency);
 
   /* Initialize members */
