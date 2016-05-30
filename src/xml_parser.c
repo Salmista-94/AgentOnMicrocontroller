@@ -288,10 +288,10 @@ agent_xml_parse__wg_code(agent_p agent, xml_parser_p xml_parser)
   wg_code_node = xml_parser->node;
   text = xml_get_text( wg_code_node );
   /* If there is no text, just return... */
-	if (text == NULL) {
-		agent->wg_code=NULL;
-		return MC_SUCCESS;
-	}
+    if (text == NULL) {
+        agent->wg_code=NULL;
+        return MC_SUCCESS;
+    }
 
   agent->wg_code = (char*)malloc(
       sizeof(char)*(strlen(text)+1)
@@ -565,48 +565,43 @@ agent_xml_parse__task(agent_p agent, xml_parser_p xml_parser, int index)
 error_code_t
 agent_xml_parse__data(agent_p agent, xml_parser_p xml_parser, int index)
 {
-  const char* attribute;
-  const char* attribute2;
-  mxml_node_t *data_node;
-  int data_type_size;
-  interpreter_variable_data_t* interp_variable;
-  if (xml_parser->node == NULL) {
-    return MC_ERR_PARSE;
-  }
-  if (strcmp(
-        "DATA",
-        xml_get_element_name(xml_parser->node) )
-     )
-  {
-    return MC_ERR_PARSE;
-  }
-  data_node = xml_parser->node;
+    const char* attribute;
+    const char* attribute2;
+    mxml_node_t *data_node;
+    int data_type_size;
+    interpreter_variable_data_t* interp_variable;
+    if (xml_parser->node == NULL)
+      return MC_ERR_PARSE;
+    
+    if ( strcmp("DATA", xml_get_element_name(xml_parser->node)) )
+        return MC_ERR_PARSE;
+    
+    data_node = xml_parser->node;
+    
+    /* Check to see if this is the return variable */
+    attribute = mxmlElementGetAttr(
+        data_node->parent,
+        "return" );
+    attribute2 = mxmlElementGetAttr(
+        data_node,
+        "name" );
 
-  /* Check to see if this is the return variable */
-  attribute = mxmlElementGetAttr(
-      data_node->parent,
-      "return" );
-  attribute2 = mxmlElementGetAttr(
-      data_node,
-      "name" );
-  if (attribute != NULL && !strcmp(attribute, attribute2)) {
-    /* This variable is the return variable. */
-
-    /* Allocate Return data structure */
-    /* FIXME: This may not be the right place to do this,
-     * but it is safe and leak free. */
-    agent->datastate->tasks[index]->agent_return_data = 
-      interpreter_variable_data_New(); 
-    interp_variable = agent->datastate->tasks[index]->agent_return_data;
-  } else {
-    interp_variable = interpreter_variable_data_New();
-    ListWRLock(agent->datastate->tasks[index]->agent_variable_list);
-    ListAdd(
-        agent->datastate->tasks[index]->agent_variable_list,
-        interp_variable );
-    ListWRUnlock(agent->datastate->tasks[index]->agent_variable_list);
-  }
-
+    if (attribute != NULL && !strcmp(attribute, attribute2)) {
+        /* This variable is the return variable. */
+    
+        /* Allocate Return data structure */
+        /* FIXME: This may not be the right place to do this,
+         * but it is safe and leak free. */
+        agent->datastate->tasks[index]->agent_return_data = 
+          interpreter_variable_data_New(); 
+        interp_variable = agent->datastate->tasks[index]->agent_return_data;
+    } else {
+            interp_variable = interpreter_variable_data_New();
+            ListWRLock(agent->datastate->tasks[index]->agent_variable_list);
+            ListAdd(agent->datastate->tasks[index]->agent_variable_list,
+                interp_variable );
+            ListWRUnlock(agent->datastate->tasks[index]->agent_variable_list);
+    }   
 
   /* Attributes we need to parse:
    * O dim          - dimension of the return data
@@ -879,7 +874,7 @@ void agent_xml_parse__fill_row_data(
           if (data != NULL)
 #ifndef _WIN32
             ((float*)data)[*index] = strtof(tmp, NULL);
-#else	
+#else   
           ((float*)data)[*index] = (float)strtod(tmp, NULL);
 #endif
           (*index)++;

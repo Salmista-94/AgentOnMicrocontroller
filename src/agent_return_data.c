@@ -42,30 +42,91 @@
 #include "include/interpreter_variable_data.h"
 #include "include/agent.h"
 
-interpreter_variable_data_p
-interpreter_variable_data_New(void)
-{
-  interpreter_variable_data_p agent_variable_data;
-  agent_variable_data = (interpreter_variable_data_p)malloc(sizeof(interpreter_variable_data_t));
-  Exit__when_CHECK_NULL(agent_variable_data, 0);
-  agent_variable_data->name = NULL;
-  agent_variable_data->size = 0;
-  agent_variable_data->data_type = (ChType_t)0;
-  agent_variable_data->array_dim = 0;
-  agent_variable_data->array_extent = NULL;
-  agent_variable_data->data = NULL;
-  return agent_variable_data;
+
+#define MAX_Parse_VAR                 150
+struct interpreter_variable_data_s _ListParseVAR[MAX_Parse_VAR];
+unsigned short int count_ParseVAR= 0;
+
+
+interpreter_variable_data_p getNewParseVAR(){
+    if (count_ParseVAR == MAX_Parse_VAR){
+        fprintf(stderr, "MAX_Parse_VAR: array bound excedent!");
+        return NULL;
+    }
+    count_ParseVAR++;
+    return &_ListParseVAR[count_ParseVAR-1]
 }
 
-interpreter_variable_data_p 
-interpreter_variable_data_InitializeFromAgent(agent_p agent)
+
+#define MAX_Parse_string                 5
+char _ListParseString[MAX_Parse_string][1024];
+unsigned short int count_ParseString= 0;
+
+
+char* getNewParseString(){
+    if (count_ParseString == MAX_Parse_string){
+        fprintf(stderr, "MAX_Parse_string: array bound excedent!");
+        return NULL;
+    }
+    count_ParseString++;
+    return &_ListParseString[count_ParseString-1]
+}
+
+
+#define MAX_Parse_LInt                 5
+int _ListParseLInt[MAX_Parse_LInt][10];
+unsigned short int count_ParseLInt= 0;
+
+
+int* getNewParseListInt(){
+    if (count_ParseLInt == MAX_Parse_LInt){
+        fprintf(stderr, "MAX_Parse_LInt: array bound excedent!");
+        return NULL;
+    }
+    count_ParseLInt++;
+    return &_ListParseLInt[count_ParseLInt-1]
+}
+
+
+
+
+
+
+interpreter_variable_data_p interpreter_variable_data_New(void)
+{
+    interpreter_variable_data_p agent_variable_data;
+
+#ifndef MICRO_CORTEX_M
+    agent_variable_data = (interpreter_variable_data_p)malloc(sizeof(interpreter_variable_data_t));
+#else
+    agent_variable_data = getNewParseVAR();
+#endif
+
+    Exit__when_CHECK_NULL(agent_variable_data, 0);
+    agent_variable_data->name = NULL;
+    agent_variable_data->size = 0;
+    agent_variable_data->data_type = (ChType_t)0;
+    agent_variable_data->array_dim = 0;
+    agent_variable_data->array_extent = NULL;
+    agent_variable_data->data = NULL;
+    return agent_variable_data;
+}
+
+
+interpreter_variable_data_p interpreter_variable_data_InitializeFromAgent(agent_p agent)
 {
     int i;
     int size;
     int data_type_size;
     int progress;
     interpreter_variable_data_t *agent_return;
-    agent_return = (interpreter_variable_data_t*)malloc(sizeof(interpreter_variable_data_t));
+
+#ifndef MICRO_CORTEX_M
+    agent_return = (interpreter_variable_data_p)malloc(sizeof(interpreter_variable_data_t));
+#else
+    agent_return = getNewParseVAR();
+#endif
+
     agent_return->name = strdup(
             agent->datastate->tasks[agent->datastate->task_progress]
             ->var_name );
@@ -81,8 +142,7 @@ interpreter_variable_data_InitializeFromAgent(agent_p agent)
             agent->datastate->tasks[agent->datastate->task_progress]
             ->var_name );
     /* Get the array extents */
-    agent_return->array_extent = (int*)malloc(
-            sizeof(int) * agent_return->array_dim );
+    agent_return->array_extent = (int*)malloc(sizeof(int) * agent_return->array_dim );
     for (i=0; i<agent_return->array_dim; i++) {
         agent_return->array_extent[i] = 
             Ch_ArrayExtent(
@@ -101,7 +161,39 @@ interpreter_variable_data_InitializeFromAgent(agent_p agent)
     /* Now get the data type size */
     CH_DATATYPE_SIZE(agent_return->data_type, data_type_size);
 
+
+#ifndef MICRO_CORTEX_M
     agent_return->data = (void*)malloc(size * data_type_size);
+#else
+
+    switch(type) {                                              \
+      case CH_CHARTYPE:                                       \
+        agent_return->data = getNewParseString();           \
+      break;                                              \
+      case CH_INTTYPE:                                        \
+        agent_return->data = getNewParseListInt();                                 \
+      break;                                              \
+      case CH_UINTTYPE:                                       \
+        fprintf(stderr, "unknown: type is not allocated!");                       \
+      break;                                              \
+      case CH_SHORTTYPE:                                      \
+        fprintf(stderr, "unknown: type is not allocated!");                               \
+      break;                                              \
+      case CH_USHORTTYPE:                                     \
+        fprintf(stderr, "unknown: type is not allocated!");                      \
+      break;                                              \
+      case CH_FLOATTYPE:                                      \
+        fprintf(stderr, "unknown: type is not allocated!");                               \
+      break;                                              \
+      case CH_DOUBLETYPE:                                     \
+        fprintf(stderr, "unknown: type is not allocated!");                              \
+      break;                                              \
+      default:                                                \
+       fprintf(stderr, "unknown: type is not allocated!");                                             \
+    }
+
+#endif
+
     Exit__when_CHECK_NULL(agent_return->data, 0);
     /* Copy the data over from the agent */
     /* For now, only support statically allocated global vars. */
@@ -151,8 +243,13 @@ interpreter_variable_data_Initialize(agent_p agent, const char* varname)
 
   /* Make sure the agent is not running */
   MUTEX_LOCK(agent->run_lock);
+    
+#ifndef MICRO_CORTEX_M
+    interp_variable = (interpreter_variable_data_p)malloc(sizeof(interpreter_variable_data_t));
+#else
+    interp_variable = getNewParseVAR();
+#endif
 
-  interp_variable = (interpreter_variable_data_t*)malloc(sizeof(interpreter_variable_data_t));
   interp_variable->name = strdup(varname);
 
   /* Get the array data type */
@@ -164,8 +261,7 @@ interpreter_variable_data_Initialize(agent_p agent, const char* varname)
       *agent->agent_interp,
       varname );
   /* Get the array extents */
-  interp_variable->array_extent = (int*)malloc(
-      sizeof(int) * interp_variable->array_dim );
+  interp_variable->array_extent = (int*)malloc(sizeof(int) * interp_variable->array_dim );
   for (i=0; i<interp_variable->array_dim; i++) {
     interp_variable->array_extent[i] = 
       Ch_ArrayExtent(
