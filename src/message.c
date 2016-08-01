@@ -199,7 +199,7 @@ message_InitializeFromAgent(
   }
   message->agent_xml_flag = 0;
   message->target = strdup("ams");
-	message->sending_agent_name = strdup(agent->name);
+    message->sending_agent_name = strdup(agent->name);
   /* Set up message->addr */
   if(mc_platform->bluetooth == 0) {
     buf = (char*)malloc
@@ -263,7 +263,7 @@ message_InitializeFromConnection(
         0,
         (struct sockaddr *) 0,
         (socklen_t *) 0); */
-		n = recv(connection->clientfd, (void*)buffer, (size_t) sizeof(char)*SOCKET_INPUT_SIZE, MSG_WAITALL);
+        n = recv(connection->clientfd, (void*)buffer, (size_t) sizeof(char)*SOCKET_INPUT_SIZE, MSG_WAITALL);
 #else
     n = recvfrom(connection->clientfd,
         buffer,
@@ -274,7 +274,7 @@ message_InitializeFromConnection(
 #endif
     if (n < 0) {
       free(buffer);
-			MC_SOCKET_ERROR();
+            MC_SOCKET_ERROR();
       return MC_ERR_CONNECT;
     } 
     else if (n == 0) {
@@ -534,8 +534,8 @@ auth_rece_send_msg(int sockfd, char *hostname, char *message, char *privkey, cha
      sprintf(outfile, "en-msg%d", num);
      */     
   strcpy(privatekey, privkey);
-  //printf("\n ################################### \n");	
-  //printf("Authenticating %s \n", hostname);	
+  //printf("\n ################################### \n");    
+  //printf("Authenticating %s \n", hostname);   
   //printf("Known host file lookup for peer public key ... \n");
   // Known host file lookup for peer public key 
   if (read_known_host_file(peer_pubkey, hostname, known_host_filename) == -1 ){
@@ -557,7 +557,7 @@ auth_rece_send_msg(int sockfd, char *hostname, char *message, char *privkey, cha
         printf("Unable to write message in a file \n");
         if( remove(infile) ) printf("message.c : remove error 1");
       }else{
-        //printf("message length = %d \n", strlen(message) );	 
+        //printf("message length = %d \n", strlen(message) );    
         fwrite (message , 1 , strlen(message) , fd );
         fclose(fd);  
         // Encrypt message file
@@ -566,7 +566,7 @@ auth_rece_send_msg(int sockfd, char *hostname, char *message, char *privkey, cha
           printf("Client: AES Encryption Failed \n");
           if( remove(infile) ) printf("message.c : remove error 2"); 
           if( remove(outfile) ) printf("message.c : remove error 3");
-        }else{	
+        }else{  
           if( remove(infile) ) printf("message.c : remove error 4");
           if (send_AES_en_MA(sockfd, &nonce, outfile, peer_pubkey) != 1  ){
             printf("Client: Error while sending mobile agent \n");
@@ -574,7 +574,7 @@ auth_rece_send_msg(int sockfd, char *hostname, char *message, char *privkey, cha
           }else{
             if( remove(outfile) ) printf("message.c : remove error 6");
             //printf(" Successfully send the message \n");
-            ret = 2;	
+            ret = 2;    
           }
         }
       }
@@ -591,29 +591,29 @@ auth_rece_send_msg(int sockfd, char *hostname, char *message, char *privkey, cha
 #define MSG_THREADS 200
 int message_Send(mc_platform_t* mc_platform, message_p message, char *privatekey)
 {
-	THREAD_T msg_thread;
-	message_send_arg_t* arg;
+    THREAD_T msg_thread;
+    message_send_arg_t* arg;
 #ifndef _WIN32
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
 #else
-	int stack_size = 0;
+    int stack_size = 0;
 #endif
 
-	arg = (message_send_arg_t*)malloc(sizeof(message_send_arg_t));
-	arg->mc_platform = mc_platform;
-	arg->message = message;
-	arg->privatekey = privatekey;
+    arg = (message_send_arg_t*)malloc(sizeof(message_send_arg_t));
+    arg->mc_platform = mc_platform;
+    arg->message = message;
+    arg->privatekey = privatekey;
 
-	MUTEX_LOCK(&mc_platform->acc->msg_thread_lock);
-	while(mc_platform->acc->num_msg_threads >= MSG_THREADS) {
-		COND_WAIT(&mc_platform->acc->msg_thread_cond, &mc_platform->acc->msg_thread_lock);
-	}
-	mc_platform->acc->num_msg_threads++;
-	MUTEX_UNLOCK(&mc_platform->acc->msg_thread_lock);
-	/* DEBUG */
-	THREAD_CREATE(&msg_thread, message_send_Thread, arg);
-	THREAD_DETACH(msg_thread);
+    MUTEX_LOCK(&mc_platform->acc->msg_thread_lock);
+    while(mc_platform->acc->num_msg_threads >= MSG_THREADS) {
+        COND_WAIT(&mc_platform->acc->msg_thread_cond, &mc_platform->acc->msg_thread_lock);
+    }
+    mc_platform->acc->num_msg_threads++;
+    MUTEX_UNLOCK(&mc_platform->acc->msg_thread_lock);
+    /* DEBUG */
+    THREAD_CREATE(&msg_thread, message_send_Thread, arg);
+    THREAD_DETACH(msg_thread);
   return 0;
 }
 
@@ -624,54 +624,54 @@ typedef struct bdaddr_s {
 
 void baswap(bdaddr_t *dst, const bdaddr_t *src)
 {
-	register unsigned char *d = (unsigned char *) dst;
-	register const unsigned char *s = (const unsigned char *) src;
-	register int i;
+    register unsigned char *d = (unsigned char *) dst;
+    register const unsigned char *s = (const unsigned char *) src;
+    register int i;
 
-	for (i = 0; i < 6; i++)
-		d[i] = s[5-i];
+    for (i = 0; i < 6; i++)
+        d[i] = s[5-i];
 }
 
 int str2ba(const char *str, bdaddr_t *ba)
 {
-	UINT8 b[6];
-	const char *ptr = str;
-	int i;
+    UINT8 b[6];
+    const char *ptr = str;
+    int i;
 
-	for (i = 0; i < 6; i++) {
-		b[i] = (UINT8) strtol(ptr, NULL, 16);
-		if (i != 5 && !(ptr = strchr(ptr, ':')))
-			ptr = ":00:00:00:00:00";
-		ptr++;
-	}
+    for (i = 0; i < 6; i++) {
+        b[i] = (UINT8) strtol(ptr, NULL, 16);
+        if (i != 5 && !(ptr = strchr(ptr, ':')))
+            ptr = ":00:00:00:00:00";
+        ptr++;
+    }
 
-	baswap(ba, (bdaddr_t *) b);
+    baswap(ba, (bdaddr_t *) b);
 
-	return 0;
+    return 0;
 }
 #endif
 
 #ifndef _WIN32
 #define MSG_THREAD_EXIT() \
-	free(arg); \
-	message_Destroy(message); \
+    free(arg); \
+    message_Destroy(message); \
   if(myaddrinfo) { \
     freeaddrinfo(myaddrinfo); \
   } \
-	MUTEX_LOCK(&mc_platform->acc->msg_thread_lock); \
-	mc_platform->acc->num_msg_threads--; \
-	COND_SIGNAL(&mc_platform->acc->msg_thread_cond); \
-	MUTEX_UNLOCK(&mc_platform->acc->msg_thread_lock); \
-	THREAD_EXIT()
+    MUTEX_LOCK(&mc_platform->acc->msg_thread_lock); \
+    mc_platform->acc->num_msg_threads--; \
+    COND_SIGNAL(&mc_platform->acc->msg_thread_cond); \
+    MUTEX_UNLOCK(&mc_platform->acc->msg_thread_lock); \
+    THREAD_EXIT()
 #else
 #define MSG_THREAD_EXIT() \
-	free(arg); \
-	message_Destroy(message); \
-	MUTEX_LOCK(&mc_platform->acc->msg_thread_lock); \
-	mc_platform->acc->num_msg_threads--; \
-	COND_SIGNAL(&mc_platform->acc->msg_thread_cond); \
-	MUTEX_UNLOCK(&mc_platform->acc->msg_thread_lock); \
-	THREAD_EXIT()
+    free(arg); \
+    message_Destroy(message); \
+    MUTEX_LOCK(&mc_platform->acc->msg_thread_lock); \
+    mc_platform->acc->num_msg_threads--; \
+    COND_SIGNAL(&mc_platform->acc->msg_thread_cond); \
+    MUTEX_UNLOCK(&mc_platform->acc->msg_thread_lock); \
+    THREAD_EXIT()
 #endif
 
 #ifdef _WIN32
@@ -688,9 +688,9 @@ message_send_Thread(void* arg)
 message_send_Thread( LPVOID arg )
 #endif
 {
-	mc_platform_t* mc_platform;
-	message_p message;
-	char* privatekey;
+    mc_platform_t* mc_platform;
+    message_p message;
+    char* privatekey;
   char *buffer;
   mtp_http_t* mtp_http;
   int n;
@@ -719,21 +719,21 @@ message_send_Thread( LPVOID arg )
 #endif
   int port;
 
-	int num_tries = 0;
-	const int max_num_tries = 100;
-	int errnum;
+    int num_tries = 0;
+    const int max_num_tries = 100;
+    int errnum;
 
-	dynstring_t* message_string;
+    dynstring_t* message_string;
 #ifdef NEW_SECURITY
   int ret;
 #endif
   int numtries = 0;
   int maxtries = 10;
 
-	mc_platform = ((message_send_arg_t*)arg)->mc_platform;
-	message = ((message_send_arg_t*)arg)->message;
-	privatekey = ((message_send_arg_t*)arg)->privatekey;
-		
+    mc_platform = ((message_send_arg_t*)arg)->mc_platform;
+    message = ((message_send_arg_t*)arg)->message;
+    privatekey = ((message_send_arg_t*)arg)->privatekey;
+        
   /* Compose the http message */
   if (
       mtp_http_ComposeMessage(
@@ -741,7 +741,7 @@ message_send_Thread( LPVOID arg )
         )
      )
   {
-		fprintf(stderr, "Compose Message Error. %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "Compose Message Error. %s:%d\n", __FILE__, __LINE__);
     MSG_THREAD_EXIT();
   }
 
@@ -848,15 +848,15 @@ message_send_Thread( LPVOID arg )
 #endif                 /* ********************************************************/
   num_tries = 0;
   while(
-		(num_tries < max_num_tries) && (errnum < 0)
-		) {
-		printf("ERROR Socket Connect failed... errno:%s\n", strerror(errno));
+        (num_tries < max_num_tries) && (errnum < 0)
+        ) {
+        printf("ERROR Socket Connect failed... errno:%s\n", strerror(errno));
 #ifndef _WIN32
-		usleep(100000);
+        usleep(100000);
 #else
-		Sleep(100);
+        Sleep(100);
 #endif
-		num_tries++;
+        num_tries++;
 #ifndef _WIN32
     if (mc_platform->bluetooth) {
 #if HAVE_LIBBLUETOOTH
@@ -875,7 +875,7 @@ message_send_Thread( LPVOID arg )
     }
 #endif
   }
-	if (num_tries == max_num_tries) {
+    if (num_tries == max_num_tries) {
     fprintf(stderr, "Error - can't connect to %s:%d\n",
         hostname,
         port
@@ -883,7 +883,7 @@ message_send_Thread( LPVOID arg )
     free(buf);
     CLOSESOCKET(skt);
     MSG_THREAD_EXIT();
-	}
+    }
 
 #ifdef NEW_SECURITY 
   /*  authenticate the receiver of message */
@@ -892,24 +892,24 @@ message_send_Thread( LPVOID arg )
     printf("Successfull Authenticate and but send of MA is failed \n");
 #ifndef _WIN32
     if(closeSocket(skt) < 0) {
-			MC_SOCKET_ERROR();
-		}
+            MC_SOCKET_ERROR();
+        }
 #else
     closeSocket(skt);
 #endif
     free(buf);
-		fprintf(stderr, "Security Error. %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "Security Error. %s:%d\n", __FILE__, __LINE__);
     MSG_THREAD_EXIT();
   }else if(ret != 2){
 #ifndef _WIN32
     if(closeSocket(skt) < 0) {
-			MC_SOCKET_ERROR();
-		}
+            MC_SOCKET_ERROR();
+        }
 #else
     closeSocket(skt);
 #endif
     free(buf);
-		fprintf(stderr, "Security Error. %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "Security Error. %s:%d\n", __FILE__, __LINE__);
     MSG_THREAD_EXIT();
   }else if(ret == 2) // successfully authenticate and send
     //printf("successfully authenticate and send \n");        
@@ -926,49 +926,49 @@ message_send_Thread( LPVOID arg )
       memset(buffer, 0, sizeof(char) * (SOCKET_INPUT_SIZE + 2));
       Exit__when_CHECK_NULL(buffer, 0);
       mtp_http = mtp_http_New();
-			message_string = dynstring_New();
-			while(1) {
+            message_string = dynstring_New();
+            while(1) {
 #ifndef _WIN32
-/*				n = recvfrom(skt,
-						(void *) buffer,
-						(size_t) sizeof(char)*SOCKET_INPUT_SIZE,
-						0,
-						(struct sockaddr *) 0,
-						(socklen_t *) 0);
+/*              n = recvfrom(skt,
+                        (void *) buffer,
+                        (size_t) sizeof(char)*SOCKET_INPUT_SIZE,
+                        0,
+                        (struct sockaddr *) 0,
+                        (socklen_t *) 0);
 */
-				n = recv(skt, (void*)buffer, (size_t) sizeof(char)*SOCKET_INPUT_SIZE, 0);
+                n = recv(skt, (void*)buffer, (size_t) sizeof(char)*SOCKET_INPUT_SIZE, 0);
 #else
 /*
-				n = recvfrom(skt,
-						buffer,
-						(size_t) sizeof(char)*SOCKET_INPUT_SIZE,
-						0,
-						(struct sockaddr *) 0,
-						0);
-						*/
-				n = recv( skt, (char*)buffer, sizeof(char)*SOCKET_INPUT_SIZE, 0);
+                n = recvfrom(skt,
+                        buffer,
+                        (size_t) sizeof(char)*SOCKET_INPUT_SIZE,
+                        0,
+                        (struct sockaddr *) 0,
+                        0);
+                        */
+                n = recv( skt, (char*)buffer, sizeof(char)*SOCKET_INPUT_SIZE, 0);
 #endif
-				if (n<0) {
+                if (n<0) {
           if(numtries < maxtries) {
             numtries++;
             continue;
           }
-					/* There was an error receiving the response. */
-					MC_SOCKET_ERROR();
+                    /* There was an error receiving the response. */
+                    MC_SOCKET_ERROR();
           perror("recv");
-					free(buffer);
+                    free(buffer);
           dynstring_Destroy(message_string);
           CLOSESOCKET(skt);
-					MSG_THREAD_EXIT();
-				}
-				else if (n==0) {
-					break;
-				}
-				else
-				{
-					dynstring_Append(message_string, buffer);
-				}
-			}
+                    MSG_THREAD_EXIT();
+                }
+                else if (n==0) {
+                    break;
+                }
+                else
+                {
+                    dynstring_Append(message_string, buffer);
+                }
+            }
       if( mtp_http_Parse(mtp_http, message_string->message) ) {
         fprintf(stderr, "http parsing error: Response expected. %s:%d\n",
             __FILE__, __LINE__);
@@ -984,14 +984,14 @@ message_send_Thread( LPVOID arg )
 
 #ifndef _WIN32
   if(close(skt) <0) {
-		MC_SOCKET_ERROR();
-	}
+        MC_SOCKET_ERROR();
+    }
 #else
   closeSocket(skt);
 #endif
   free(buf);
   free(buffer);
-	dynstring_Destroy(message_string);
+    dynstring_Destroy(message_string);
   MSG_THREAD_EXIT();
 }
 

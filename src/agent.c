@@ -32,7 +32,9 @@
  * to the extent permitted by applicable law.
 ]*/
 
-#ifndef _WIN32
+#ifdef MICRO_CORTEX_M
+		#include "CORTEX_config.h"
+#elif !defined(_WIN32)
 #include <unistd.h>
 #include "config.h"
 #else

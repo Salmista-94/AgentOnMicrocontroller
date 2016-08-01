@@ -1,9 +1,13 @@
 /* SVN FILE INFO
  * $Revision: 517 $ : Last Committed Revision
  * $Date: 2010-06-11 12:06:47 -0700 (Fri, 11 Jun 2010) $ : Last Committed Date */
-#ifndef _WIN32
+
+#ifdef MICRO_CORTEX_M
+		#include "task.h"
+#elif !defined(_WIN32)
 #include <pthread.h>
 #endif
+
 #include "sync_list.h"
 #include "../mc_list/list.h"
 #include "../include/mc_error.h"

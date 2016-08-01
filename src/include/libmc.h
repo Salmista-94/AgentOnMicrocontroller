@@ -125,8 +125,8 @@ MC_WaitSignal
 #ifndef _MOBILEC_H_
 #define _MOBILEC_H_
 
-#ifdef _WIN32
-#include<windows.h>
+#if _WIN32
+//#include<windows.h>
 	#ifdef _MC_DLL
 		// Building a .dll - export functions as marked
 		#define EXPORTMC __declspec(dllexport)
@@ -137,6 +137,12 @@ MC_WaitSignal
 #else
 	// Not windows
 	#define EXPORTMC
+
+	#ifdef MICRO_CORTEX_M
+			#include "FreeRTOS.h"
+			#include "task.h"
+			#include <stdarg.h>
+	#endif
 #endif
 
 /* The MC_Wait() function is deprecated as of version 1.9.4.
@@ -144,7 +150,7 @@ MC_WaitSignal
 #define MC_Wait(arg1) \
   MC_MainLoop(arg1)
 
-#include <embedch.h>
+//#include <embedch.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -153,7 +159,10 @@ extern "C" {
 /* Should return 0 on success, non-zero on failure */
 struct agent_s;
 typedef int (*MC_AgentInitCallbackFunc_t)(
+  
+#ifndef MICRO_CORTEX_M
     ChInterp_t interp, 
+#endif
     struct agent_s* agent, 
     void* user_data);
 
@@ -283,7 +292,9 @@ typedef struct MCAgencyOptions_s{
 #endif
 
     int bluetooth; /* Startup in bluetooth mode */
+#ifndef MICRO_CORTEX_M
     ChOptions_t* ch_options;
+#endif
 
     unsigned long long initialized; /* This will contain a magic number if the struct
     has been initialized. The magic number is kept in the define
@@ -296,7 +307,9 @@ typedef struct stationary_agent_info_s{
 	struct agent_s* agent;
 	MCAgency_t attr; /* DEPRECATED: Use the 'agency' member instead */
 	MCAgency_t agency;
-#ifdef _WIN32
+#ifdef MICRO_CORTEX_M
+	xTaskHandle thread;
+#elif _WIN32
 	HANDLE thread;
 #else
   pthread_t thread;
@@ -553,7 +566,7 @@ EXPORTMC int MC_AddAgentInitCallback(
     MC_AgentInitCallbackFunc_t function,
     void* user_data);
 
-EXPORTMC MCAgencyOptions_t* MC_AgencyOptions_New();
+EXPORTMC MCAgencyOptions_t* MC_AgencyOptions_New(void);
 
 /**
  * \brief           Add a new task to an already existing agent
@@ -956,6 +969,8 @@ EXPORTMC extern int MC_CallAgentFuncV(
     \param returnVal (output) Return value from the agent function
     \param arglist  Ch Variable Argument list to pass in
    */
+		
+#ifndef MICRO_CORTEX_M
 EXPORTMC extern int MC_CallAgentFuncVar
 (
  MCAgent_t agent,
@@ -963,6 +978,7 @@ EXPORTMC extern int MC_CallAgentFuncVar
  void* returnVal,
  ChVaList_t arglist
  );
+#endif
 					 
 
 /**

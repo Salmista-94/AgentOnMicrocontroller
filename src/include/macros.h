@@ -83,7 +83,9 @@
 #ifndef _MACROS_H_
 #define _MACROS_H_
 
-#ifndef _WIN32
+#ifdef MICRO_CORTEX_M
+		#include "task.h"
+#elif !defined(_WIN32)
 #include <pthread.h>
 #include <semaphore.h>
 #include <errno.h>

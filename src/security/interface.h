@@ -4,7 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef MICRO_CORTEX_M
 #include <sys/stat.h>
+#endif
 
 #define PATH xyssl-0.9/include/xyssl
 

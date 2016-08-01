@@ -1,9 +1,10 @@
 /* File: hello_world/client.c */
 //#define _MC_DLL
+
+#include "FreeRTOS.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <libmc.h>
-
+#include "libmc.h"
 int main() 
 {
   MCAgency_t agency;
@@ -29,5 +30,10 @@ int main()
 
   MC_MainLoop(agency);
   MC_End(agency);
+	
+#ifdef MICRO_CORTEX_M
+  while(1);
+#else
   exit(0);
+#endif
 }

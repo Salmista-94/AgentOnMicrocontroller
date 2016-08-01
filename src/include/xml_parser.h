@@ -43,22 +43,11 @@ STRUCT ( xml_parser,
     mxml_node_t *node; );
 
 
-error_code_t 
-agent_xml_parse(agent_p agent);
+error_code_t agent_xml_parse(agent_p agent);
 
-error_code_t 
-agent_xml_parse__mobile_agent
-(
- agent_p agent, 
- xml_parser_p xml_parser
- );
+error_code_t agent_xml_parse__mobile_agent(agent_p agent, xml_parser_p xml_parser);
 
-error_code_t
-agent_xml_parse__agent_data
-(
- agent_p agent,
- xml_parser_p xml_parser
- );
+error_code_t agent_xml_parse__agent_data(agent_p agent, xml_parser_p xml_parser);
 
 error_code_t
 agent_xml_parse__name(agent_p agent, xml_parser_p xml_parser);

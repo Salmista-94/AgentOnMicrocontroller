@@ -34,7 +34,10 @@
 
 #ifndef _ACC_H_
 #define _ACC_H_
-#ifndef _WIN32
+
+#ifdef MICRO_CORTEX_M
+		#include <stdlib.h>
+#elif !defined(_WIN32)
 #include <sys/socket.h>
 #else
 #include <windows.h>

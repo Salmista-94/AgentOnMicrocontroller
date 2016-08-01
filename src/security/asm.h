@@ -4,7 +4,12 @@
 #ifndef _ASM_H_
 #define _ASM_H_
 
+#ifdef MICRO_CORTEX_M
+		#include "CORTEX_config.h"
+#elif !defined(_WIN32)
 #include "config.h"
+#endif
+
 #include "../mc_list/list.h"
 #include "asm_node.h"
 

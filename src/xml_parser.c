@@ -32,12 +32,15 @@
  * to the extent permitted by applicable law.
 ]*/
 
-#include <mxml.h>
+#include "mxml.h"
 #include <string.h>
 #include <stdlib.h>
 #define _XOPEN_SOURCE 600
 #include <stdlib.h>
-#ifndef _WIN32
+
+#ifdef MICRO_CORTEX_M
+		#include "CORTEX_config.h"
+#elif !defined(_WIN32)
 #include "config.h"
 #else
 #include "winconfig.h"
@@ -66,40 +69,21 @@ error_code_t agent_xml_parse(agent_p agent)
 
 /* *** */
 /* agent_xml_parse__gaf_message */
-error_code_t 
-agent_xml_parse__mobile_agent
-(
- agent_p agent, 
- xml_parser_p xml_parser
- )
+error_code_t agent_xml_parse__mobile_agent(agent_p agent, xml_parser_p xml_parser)
 {
   /* make sure this is the 'MOBILE_AGENT' tag */
-  if ( 
-      strcmp(
-        (const char*)xml_get_element_name(xml_parser->node),
-        "MOBILE_AGENT"
-        )
-     )
-  {
+  if ( strcmp((const char*)xml_get_element_name(xml_parser->node), "MOBILE_AGENT"))
     return MC_ERR_PARSE;
-  }
+  
   /* There is only one child node: AGENT_DATA*/
-  xml_parser->node = xml_get_child(
-      xml_parser->node,
-      "AGENT_DATA",
-      1);
+  xml_parser->node = xml_get_child(xml_parser->node, "AGENT_DATA", 1);
 
   return agent_xml_parse__agent_data(agent, xml_parser);
 }
 
 /* *** */
 /* agent_xml_parse__message */
-error_code_t
-agent_xml_parse__agent_data
-(
- agent_p agent,
- xml_parser_p xml_parser
- )
+error_code_t agent_xml_parse__agent_data(agent_p agent, xml_parser_p xml_parser)
 {
   const mxml_node_t* agent_data_node;
   error_code_t err_code;

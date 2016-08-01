@@ -31,13 +31,18 @@
  * This software is provided "as is" without express or implied warranty
  * to the extent permitted by applicable law.
 ]*/
-#ifndef _WIN32
+
+#ifdef MICRO_CORTEX_M
+		#include "CORTEX_config.h"
+#elif !defined(_WIN32)
 #include "config.h"
 #else
 #include "winconfig.h"
 #endif
 
-#ifndef _WIN32
+#ifdef MICRO_CORTEX_M
+		#include <stdlib.h>
+#elif !defined(_WIN32)
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netdb.h>

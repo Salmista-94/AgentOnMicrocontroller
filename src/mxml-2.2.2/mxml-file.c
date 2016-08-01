@@ -52,7 +52,11 @@
  */
 
 #include "mxml.h"
-#ifdef WIN32
+
+#ifdef MICRO_CORTEX_M
+#  include "CORTEX__config.h"
+//#  include <io.h>
+#elif defined(_WIN32)
 #  include <io.h>
 #  include "winconfig.h"
 #else

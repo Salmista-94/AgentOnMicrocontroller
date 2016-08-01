@@ -31,13 +31,19 @@
  * This software is provided "as is" without express or implied warranty
  * to the extent permitted by applicable law.
 ]*/
-#ifndef _WIN32
-#include "config.h"
+
+#ifdef MICRO_CORTEX_M
+		#include "CORTEX_config.h"
+#elif !defined(_WIN32)
+#include <config.h>
 #else
 #include "winconfig.h"
 #endif
 
-#ifndef _WIN32
+#ifdef MICRO_CORTEX_M
+		#include "CORTEX_config.h"
+		#include "task.h"
+#elif !defined(_WIN32)
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/socket.h>
@@ -46,11 +52,15 @@
 #include <windows.h>
 #include <memory.h>
 #endif
-#include <embedch.h>
+//#include <embedch.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifndef _WIN32
+
+
+#ifdef MICRO_CORTEX_M
+		#include "time.h"
+#elif !defined(_WIN32)
 #include <sys/time.h>
 #else
 #include <time.h>
@@ -549,7 +559,7 @@ EXPORTMC int MC_AddAgentInitCallback(
   return 0;
 }
 
-EXPORTMC MCAgencyOptions_t* MC_AgencyOptions_New()
+EXPORTMC MCAgencyOptions_t* MC_AgencyOptions_New(void)
 {
   MCAgencyOptions_t* options;
   options = (MCAgencyOptions_t*)malloc(sizeof(MCAgencyOptions_t));

@@ -31,14 +31,22 @@
  */
 
 #include "mxml.h"
-#ifdef WIN32
+
+#ifdef MICRO_CORTEX_M
+#	 include "CORTEX__config.h"
+//#  include <io.h>
+#elif !defined(_WIN32)
 #  include <io.h>
 #  include "winconfig.h"
 #else
 #  include <unistd.h>
 #  include "config.h"
 #endif /* WIN32 */
-#include <fcntl.h>
+
+#ifdef MICRO_CORTEX_M
+#		include <stdio.h>
+#endif
+
 #ifndef O_BINARY
 #  define O_BINARY 0
 #endif /* !O_BINARY */

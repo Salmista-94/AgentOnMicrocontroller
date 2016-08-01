@@ -28,7 +28,10 @@
  * Include necessary headers...
  */
 
-#ifdef _WIN32
+
+#ifdef MICRO_CORTEX_M
+		#include "CORTEX__config.h"
+#elif !defined(_WIN32)
 #include "winconfig.h"
 #else
 #include "config.h"

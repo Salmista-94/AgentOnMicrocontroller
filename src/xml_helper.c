@@ -37,7 +37,10 @@
  * They were created to ease the switch from libxml2 to mxml.
  *
  * Written by David Ko <dko@ucdavis.edu> 2006 */
-#ifndef _WIN32
+
+#ifdef MICRO_CORTEX_M
+		#include "CORTEX_config.h"
+#elif !defined(_WIN32)
 #include "config.h"
 #else
 #include "winconfig.h"

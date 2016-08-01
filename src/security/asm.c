@@ -5,7 +5,13 @@
 #include "../include/message.h"
 #include "asm.h"
 #include "asm_message_composer.h"
+
+#ifdef MICRO_CORTEX_M
+		#include "CORTEX_config.h"
+#elif !defined(_WIN32)
 #include "config.h"
+#endif
+
 #include "mc_dh.h"
 
 #ifdef MC_SECURITY
