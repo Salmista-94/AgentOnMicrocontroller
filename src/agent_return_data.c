@@ -174,19 +174,19 @@ interpreter_variable_data_p interpreter_variable_data_InitializeFromAgent(agent_
         agent_return->data = getNewParseListInt();                                 \
       break;                                              \
       case CH_UINTTYPE:                                       \
-        fprintf(stderr, "unknown: type is not allocated!");                       \
+        fprintf(stderr, "unknown CH_UINTTYPE: type is not allocated!");                       \
       break;                                              \
       case CH_SHORTTYPE:                                      \
-        fprintf(stderr, "unknown: type is not allocated!");                               \
+        fprintf(stderr, "unknown CH_SHORTTYPE: type is not allocated!");                               \
       break;                                              \
       case CH_USHORTTYPE:                                     \
-        fprintf(stderr, "unknown: type is not allocated!");                      \
+        fprintf(stderr, "unknown CH_USHORTTYPE: type is not allocated!");                      \
       break;                                              \
       case CH_FLOATTYPE:                                      \
-        fprintf(stderr, "unknown: type is not allocated!");                               \
+        fprintf(stderr, "unknown CH_FLOATTYPE: type is not allocated!");                               \
       break;                                              \
       case CH_DOUBLETYPE:                                     \
-        fprintf(stderr, "unknown: type is not allocated!");                              \
+        fprintf(stderr, "unknown CH_DOUBLETYPE: type is not allocated!");                              \
       break;                                              \
       default:                                                \
        fprintf(stderr, "unknown: type is not allocated!");                                             \
